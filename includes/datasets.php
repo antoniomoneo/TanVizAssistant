@@ -16,8 +16,14 @@ function tanviz_list_datasets() {
         $repo   = $m[2];
         $branch = $m[3];
         $path   = rtrim( $m[4], '/' );
-        $api_url = sprintf( 'https://api.github.com/repos/%s/%s/contents/%s?ref=%s',
-            $owner, $repo, $path, $branch );
+        if ( $path ) {
+            $api_url = sprintf( 'https://api.github.com/repos/%s/%s/contents/%s?ref=%s',
+                $owner, $repo, $path, $branch );
+        } else {
+            // Root directory listing has a slightly different API endpoint
+            $api_url = sprintf( 'https://api.github.com/repos/%s/%s/contents?ref=%s',
+                $owner, $repo, $branch );
+        }
         $resp = wp_remote_get( $api_url, [ 'timeout' => 10, 'headers'=>['User-Agent'=>'TanViz'] ] );
         if ( ! is_wp_error( $resp ) && 200 === wp_remote_retrieve_response_code( $resp ) ) {
             $items = json_decode( wp_remote_retrieve_body( $resp ), true );
