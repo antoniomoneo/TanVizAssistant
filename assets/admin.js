@@ -28,6 +28,7 @@
     const dataset_url = $('#tanviz-dataset').val();
     const body = { prompt, dataset_url };
     $('#tanviz-rr').text('Generating...');
+    $('#tanviz-rr-wrap').prop('open', true);
     $.ajax({
       url: TanVizCfg.rest.generate,
       method: 'POST',

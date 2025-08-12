@@ -70,7 +70,7 @@ function tanviz_render_sandbox(){
         <section>
           <h2><?php echo esc_html__('Code (p5.js)','TanViz'); ?></h2>
           <textarea id="tanviz-code" rows="18" class="large-text code"></textarea>
-          <details><summary>Request/Response</summary><pre id="tanviz-rr"></pre></details>
+          <details id="tanviz-rr-wrap"><summary><?php echo esc_html__( 'Request/Response', 'TanViz' ); ?></summary><pre id="tanviz-rr"></pre></details>
         </section>
         <section>
           <h2><?php echo esc_html__('Preview','TanViz'); ?></h2>
