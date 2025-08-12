@@ -26,15 +26,16 @@
     e.preventDefault();
     const prompt = $('#tanviz-prompt').val();
     const dataset_url = $('#tanviz-dataset').val();
+    const body = { prompt, dataset_url };
     $('#tanviz-rr').text('Generating...');
     $.ajax({
       url: TanVizCfg.rest.generate,
       method: 'POST',
       headers: { 'X-WP-Nonce': TanVizCfg.nonce },
       contentType: 'application/json',
-      data: JSON.stringify({ prompt, dataset_url }),
+      data: JSON.stringify(body),
     }).done(function(resp){
-      $('#tanviz-rr').text(JSON.stringify(resp,null,2));
+      $('#tanviz-rr').text(JSON.stringify({request:body,response:resp},null,2));
       if (resp && resp.structured && resp.structured.code){
         setCode(resp.structured.code);
         writeIframe(resp.structured.code, $('#tanviz-title').val() || (resp.structured.meta && resp.structured.meta.title));
@@ -58,6 +59,80 @@
       const url = canvas.toDataURL('image/png');
       const a = document.createElement('a'); a.href=url; a.download='tanviz.png'; a.click();
     } catch(err){ alert('Export failed (browser sandbox)'); }
+  });
+
+  $(document).on('click','#tanviz-export-gif',function(e){
+    e.preventDefault();
+    const ifr = document.getElementById('tanviz-iframe');
+    try {
+      const canvas = ifr.contentWindow.document.querySelector('canvas');
+      if (!canvas) { alert('No canvas found'); return; }
+      const load = function(){
+        const gif = new GIF({ workers:2, quality:10 });
+        gif.addFrame(canvas, {copy:true, delay:100});
+        gif.render();
+        gif.on('finished', function(blob){
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a'); a.href=url; a.download='tanviz.gif'; a.click();
+        });
+      };
+      if (typeof GIF === 'undefined') {
+        const s = document.createElement('script');
+        s.src = 'https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.js';
+        s.onload = load; document.body.appendChild(s);
+      } else { load(); }
+    } catch(err){ alert('GIF export failed'); }
+  });
+
+  $(document).on('change','#tanviz-dataset',function(){
+    const url = $(this).val();
+    if (!url){ $('#tanviz-sample').text(''); return; }
+    $('#tanviz-sample').text('Loading...');
+    $.ajax({
+      url: TanVizCfg.rest.sample,
+      method: 'GET',
+      headers: { 'X-WP-Nonce': TanVizCfg.nonce },
+      data: { url }
+    }).done(function(resp){
+      $('#tanviz-sample').text(resp.data || '');
+    }).fail(function(){ $('#tanviz-sample').text('Error'); });
+  });
+
+  $(document).on('click','#tanviz-save',function(e){
+    e.preventDefault();
+    const payload = {
+      title: $('#tanviz-title').val(),
+      slug: $('#tanviz-slug').val(),
+      code: getCode(),
+      dataset_url: $('#tanviz-dataset').val()
+    };
+    $.ajax({
+      url: TanVizCfg.rest.save,
+      method: 'POST',
+      headers: { 'X-WP-Nonce': TanVizCfg.nonce },
+      contentType: 'application/json',
+      data: JSON.stringify(payload)
+    }).done(function(){ alert('Saved'); })
+      .fail(function(){ alert('Save failed'); });
+  });
+
+  $(document).on('click','#tanviz-copy-iframe',function(e){
+    e.preventDefault();
+    const slug = $('#tanviz-slug').val();
+    if (!slug){ alert('Slug required'); return; }
+    const iframe = '<iframe src="'+TanVizCfg.embed+encodeURIComponent(slug)+'" loading="lazy"></iframe>';
+    navigator.clipboard.writeText(iframe).then(()=>alert('Copied'));
+  });
+
+  $(document).on('click','.tanviz-copy-shortcode',function(e){
+    e.preventDefault();
+    const sc = $(this).data('shortcode');
+    navigator.clipboard.writeText(sc).then(()=>alert('Copied'));
+  });
+  $(document).on('click','.tanviz-copy-iframe',function(e){
+    e.preventDefault();
+    const sc = $(this).data('iframe');
+    navigator.clipboard.writeText(sc).then(()=>alert('Copied'));
   });
 
   $(document).ready(initEditor);

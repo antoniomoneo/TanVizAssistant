@@ -16,9 +16,12 @@ function tanviz_admin_assets( $hook ){
         'rest' => [
             'generate' => esc_url_raw( rest_url('TanViz/v1/generate') ),
             'datasets' => esc_url_raw( rest_url('TanViz/v1/datasets') ),
+            'sample'   => esc_url_raw( rest_url('TanViz/v1/sample') ),
+            'save'     => esc_url_raw( rest_url('TanViz/v1/save') ),
         ],
         'nonce' => wp_create_nonce('wp_rest'),
         'logo'  => esc_url( get_option('tanviz_logo_url', TANVIZ_URL.'assets/logo.png') ),
+        'embed' => esc_url( home_url('tanviz/embed/') ),
     ]);
     // Code editor for the sandbox editor textarea
     $settings = wp_enqueue_code_editor( [ 'type'=>'text/javascript' ] );
@@ -52,13 +55,17 @@ function tanviz_render_sandbox(){
               <option value="<?php echo esc_attr($d['url']); ?>"><?php echo esc_html($d['name']); ?></option>
             <?php endforeach; ?>
           </select>
+          <h2><?php echo esc_html__('Dataset sample','TanViz'); ?></h2>
+          <pre id="tanviz-sample"></pre>
           <p><button class="button button-primary" id="tanviz-generate"><?php echo esc_html__('Generate visualization','TanViz'); ?></button>
              <button class="button" id="tanviz-preview"><?php echo esc_html__('Update preview','TanViz'); ?></button></p>
           <h2><?php echo esc_html__('Title & Slug','TanViz'); ?></h2>
           <input type="text" id="tanviz-title" class="regular-text" placeholder="Title">
           <input type="text" id="tanviz-slug" class="regular-text code" placeholder="slug-for-visualization">
           <p><button class="button" id="tanviz-save"><?php echo esc_html__('Save to Library','TanViz'); ?></button>
-             <button class="button" id="tanviz-export"><?php echo esc_html__('Export PNG','TanViz'); ?></button></p>
+             <button class="button" id="tanviz-export"><?php echo esc_html__('Export PNG','TanViz'); ?></button>
+             <button class="button" id="tanviz-export-gif"><?php echo esc_html__('Export GIF','TanViz'); ?></button>
+             <button class="button" id="tanviz-copy-iframe"><?php echo esc_html__('Copy iframe','TanViz'); ?></button></p>
         </section>
         <section>
           <h2><?php echo esc_html__('Code (p5.js)','TanViz'); ?></h2>
@@ -76,14 +83,23 @@ function tanviz_render_sandbox(){
 
 function tanviz_render_library(){
     $q = new WP_Query([ 'post_type'=>'tanviz_visualization', 'posts_per_page'=>50, 'post_status'=>'any' ]);
-    echo '<div class="wrap"><h1>TanViz — Library</h1><table class="widefat"><thead><tr><th>Title</th><th>Slug</th><th>Date</th></tr></thead><tbody>';
+    echo '<div class="wrap"><h1>TanViz — Library</h1><table class="widefat"><thead><tr><th>'.esc_html__('Title','TanViz').'</th><th>'.esc_html__('Slug','TanViz').'</th><th>'.esc_html__('Date','TanViz').'</th><th>'.esc_html__('Actions','TanViz').'</th></tr></thead><tbody>';
     if ( $q->have_posts() ) {
         while( $q->have_posts() ){ $q->the_post();
-            echo '<tr><td>'.esc_html(get_the_title()).'</td><td>'.esc_html(get_post_field('post_name')).'</td><td>'.esc_html(get_the_date()).'</td></tr>';
+            $slug = get_post_field('post_name');
+            $iframe = sprintf('<iframe src="%s" loading="lazy"></iframe>', esc_url( home_url('tanviz/embed/'.$slug) ));
+            $shortcode = sprintf('[TanViz slug="%s"]', esc_attr($slug));
+            $del = wp_nonce_url( admin_url('post.php?action=delete&post='.get_the_ID()), 'delete-post_'.get_the_ID() );
+            echo '<tr><td>'.esc_html(get_the_title()).'</td><td>'.esc_html($slug).'</td><td>'.esc_html(get_the_date()).'</td><td>';
+            echo '<a href="'.esc_url(get_edit_post_link()).'">'.esc_html__('Edit','TanViz').'</a> | ';
+            echo '<a href="#" class="tanviz-copy-shortcode" data-shortcode="'.esc_attr($shortcode).'">'.esc_html__('Copy shortcode','TanViz').'</a> | ';
+            echo '<a href="#" class="tanviz-copy-iframe" data-iframe="'.esc_attr($iframe).'">'.esc_html__('Copy iframe','TanViz').'</a> | ';
+            echo '<a href="'.esc_url($del).'" onclick="return confirm(\''.esc_js(__('Delete?','TanViz')).'\');">'.esc_html__('Delete','TanViz').'</a>';
+            echo '</td></tr>';
         }
         wp_reset_postdata();
     } else {
-        echo '<tr><td colspan="3">No visualizations yet.</td></tr>';
+        echo '<tr><td colspan="4">'.esc_html__('No visualizations yet.','TanViz').'</td></tr>';
     }
     echo '</tbody></table></div>';
 }
