@@ -125,6 +125,17 @@
     navigator.clipboard.writeText(iframe).then(()=>alert('Copied'));
   });
 
+  $(document).on('click','#tanviz-copy-code',function(e){
+    e.preventDefault();
+    navigator.clipboard.writeText(getCode()).then(()=>alert('Copied'));
+  });
+
+  $(document).on('click','#tanviz-copy-rr',function(e){
+    e.preventDefault();
+    const txt = $('#tanviz-rr').text();
+    if (txt){ navigator.clipboard.writeText(txt).then(()=>alert('Copied')); }
+  });
+
   $(document).on('click','.tanviz-copy-shortcode',function(e){
     e.preventDefault();
     const sc = $(this).data('shortcode');

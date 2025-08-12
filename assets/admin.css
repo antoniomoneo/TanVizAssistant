@@ -2,3 +2,4 @@
 .tanviz-grid section{background:#fff;border:1px solid #ccd0d4;padding:1rem}
 .tanviz-wrap iframe{width:100%;height:300px;border:1px solid #ccd0d4}
 #tanviz-sample{max-height:200px;overflow:auto;background:#f8f8f8;padding:.5rem;border:1px solid #ccd0d4}
+#tanviz-rr{max-height:200px;overflow:auto;background:#f8f8f8;padding:.5rem;border:1px solid #ccd0d4}
