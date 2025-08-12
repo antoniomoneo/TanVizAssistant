@@ -61,13 +61,15 @@ function tanviz_rest_generate( WP_REST_Request $req ) {
 
     $schema = tanviz_p5_json_schema();
     $body   = [
-        'model'           => $model,
-        'input'           => tanviz_build_user_content( $dataset_url, $prompt, 20 ),
-        'response_format' => [
-            'type'        => 'json_schema',
-            'json_schema' => [
-                'name'   => 'p5js_code_schema',
-                'schema' => $schema,
+        'model' => $model,
+        'input' => tanviz_build_user_content( $dataset_url, $prompt, 20 ),
+        'text'  => [
+            'format' => [
+                'type'        => 'json_schema',
+                'json_schema' => [
+                    'name'   => 'p5js_code_schema',
+                    'schema' => $schema,
+                ],
             ],
         ],
     ];
