@@ -63,7 +63,7 @@ function tanviz_build_user_content( $dataset_url, $user_prompt, $sample_rows = 2
         $lines[] = 'Use loadTable/loadJSON; if fetch fails, create const sample with ~' . intval($sample_rows) . ' rows.';
     }
     $lines[] = 'Output rules:';
-    $lines[] = "- Return ONLY JSON according to schema. 'code' must be p5 (global or instance). No <script>.";
+    $lines[] = "- Return ONLY JSON according to schema. 'codigo' must be p5 (global or instance). No <script>.";
     $lines[] = '- Ensure animation or stochastic behavior (generative). Keep draw efficient.';
     $lines[] = '- Include logic for overlay title and logo.';
     $lines[] = '';
