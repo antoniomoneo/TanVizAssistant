@@ -61,12 +61,14 @@ function tanviz_rest_generate( WP_REST_Request $req ) {
     $schema = tanviz_p5_json_schema();
     $body = [
         'model' => $model,
-        'response_format' => [
-            'type' => 'json_schema',
-            'json_schema' => [
-                'name' => 'p5_sketch',
-                'strict' => true,
-                'schema' => $schema,
+        'text'  => [
+            'format' => [
+                'type'  => 'json_schema',
+                'value' => [
+                    'name'   => 'p5_sketch',
+                    'strict' => true,
+                    'schema' => $schema,
+                ],
             ],
         ],
         'input' => [
