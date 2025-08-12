@@ -8,29 +8,60 @@ if ( ! defined( 'ABSPATH' ) ) { exit; }
  * tanviz_dataset_candidates.
  */
 function tanviz_list_datasets() {
-    $base = trailingslashit( get_option('tanviz_datasets_base','') );
-    $out  = [];
+    $raw_base = get_option( 'tanviz_datasets_base', '' );
+    $out      = [];
 
-    if ( $base && preg_match('#https://raw.githubusercontent.com/([^/]+)/([^/]+)/([^/]+)/(.*)#', $base, $m) ) {
-        $owner  = $m[1];
-        $repo   = $m[2];
-        $branch = $m[3];
-        $path   = rtrim( $m[4], '/' );
+    $owner = $repo = $branch = $path = null;
+
+    if ( $raw_base ) {
+        if ( preg_match( '#https://raw.githubusercontent.com/([^/]+)/([^/]+)/([^/]+)/(.*)#', $raw_base, $m ) ) {
+            $owner  = $m[1];
+            $repo   = $m[2];
+            $branch = $m[3];
+            $path   = rtrim( $m[4], '/' );
+        } elseif ( preg_match( '#https://github.com/([^/]+)/([^/]+)(?:/(?:tree|blob)/([^/]+)/(.*))?#', $raw_base, $m ) ) {
+            $owner  = $m[1];
+            $repo   = $m[2];
+            $branch = ! empty( $m[3] ) ? $m[3] : 'main';
+            $path   = isset( $m[4] ) ? rtrim( $m[4], '/' ) : '';
+            // Convert to raw.githubusercontent.com base so links are selectable
+            $raw_base = 'https://raw.githubusercontent.com/' . $owner . '/' . $repo . '/' . $branch;
+            if ( $path ) {
+                $raw_base .= '/' . $path;
+            }
+        }
+    }
+
+    $base = trailingslashit( $raw_base );
+
+    if ( $owner ) {
         if ( $path ) {
-            $api_url = sprintf( 'https://api.github.com/repos/%s/%s/contents/%s?ref=%s',
-                $owner, $repo, $path, $branch );
+            $api_url = sprintf(
+                'https://api.github.com/repos/%s/%s/contents/%s?ref=%s',
+                $owner,
+                $repo,
+                $path,
+                $branch
+            );
         } else {
             // Root directory listing has a slightly different API endpoint
-            $api_url = sprintf( 'https://api.github.com/repos/%s/%s/contents?ref=%s',
-                $owner, $repo, $branch );
+            $api_url = sprintf(
+                'https://api.github.com/repos/%s/%s/contents?ref=%s',
+                $owner,
+                $repo,
+                $branch
+            );
         }
-        $resp = wp_remote_get( $api_url, [
-            'timeout' => 10,
-            'headers' => [
-                'User-Agent' => 'TanViz',
-                'Accept'     => 'application/vnd.github+json',
-            ],
-        ] );
+        $resp = wp_remote_get(
+            $api_url,
+            [
+                'timeout' => 10,
+                'headers' => [
+                    'User-Agent' => 'TanViz',
+                    'Accept'     => 'application/vnd.github+json',
+                ],
+            ]
+        );
         if ( ! is_wp_error( $resp ) && 200 === wp_remote_retrieve_response_code( $resp ) ) {
             $items = json_decode( wp_remote_retrieve_body( $resp ), true );
             if ( is_array( $items ) ) {
@@ -38,7 +69,7 @@ function tanviz_list_datasets() {
                     if ( isset( $item['type'] ) && $item['type'] === 'file' ) {
                         $name = $item['name'];
                         if ( preg_match( '/\.(csv|json)$/i', $name ) ) {
-                            $url = isset( $item['download_url'] ) ? $item['download_url'] : $base . $name;
+                            $url   = isset( $item['download_url'] ) ? $item['download_url'] : $base . $name;
                             $out[] = [ 'name' => $name, 'url' => $url ];
                         }
                     }
