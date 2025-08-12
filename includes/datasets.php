@@ -24,7 +24,13 @@ function tanviz_list_datasets() {
             $api_url = sprintf( 'https://api.github.com/repos/%s/%s/contents?ref=%s',
                 $owner, $repo, $branch );
         }
-        $resp = wp_remote_get( $api_url, [ 'timeout' => 10, 'headers'=>['User-Agent'=>'TanViz'] ] );
+        $resp = wp_remote_get( $api_url, [
+            'timeout' => 10,
+            'headers' => [
+                'User-Agent' => 'TanViz',
+                'Accept'     => 'application/vnd.github+json',
+            ],
+        ] );
         if ( ! is_wp_error( $resp ) && 200 === wp_remote_retrieve_response_code( $resp ) ) {
             $items = json_decode( wp_remote_retrieve_body( $resp ), true );
             if ( is_array( $items ) ) {
@@ -32,7 +38,8 @@ function tanviz_list_datasets() {
                     if ( isset( $item['type'] ) && $item['type'] === 'file' ) {
                         $name = $item['name'];
                         if ( preg_match( '/\.(csv|json)$/i', $name ) ) {
-                            $out[] = [ 'name' => $name, 'url' => $base . $name ];
+                            $url = isset( $item['download_url'] ) ? $item['download_url'] : $base . $name;
+                            $out[] = [ 'name' => $name, 'url' => $url ];
                         }
                     }
                 }
