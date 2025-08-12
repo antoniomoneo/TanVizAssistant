@@ -66,7 +66,7 @@ function tanviz_rest_generate( WP_REST_Request $req ) {
         'text'  => [
             'format' => [
                 'type'        => 'json_schema',
-                'name'        => 'p5js_code_schema',
+                'name'        => 'tanviz_p5_visualizacion',
                 'json_schema' => [
                     'schema' => $schema,
                 ],
@@ -96,19 +96,30 @@ function tanviz_rest_generate( WP_REST_Request $req ) {
     }
 
     $structured = tanviz_extract_structured( $json );
-    if ( ! $structured || empty( $structured['code'] ) ) {
+    if ( ! $structured || empty( $structured['codigo'] ) ) {
         return new WP_REST_Response( [ 'error' => 'No structured output', 'raw' => $json ], 502 );
     }
 
-    $code_p5 = tanviz_normalize_p5_code( $structured['code'] );
+    $code_p5 = tanviz_normalize_p5_code( $structured['codigo'] );
 
-    return new WP_REST_Response(
-        [
-            'ok'   => true,
-            'code' => $code_p5,
-        ],
-        200
-    );
+    $response = [
+        'ok'      => true,
+        'codigo'  => $code_p5,
+    ];
+    if ( isset( $structured['variables'] ) ) {
+        $response['variables'] = $structured['variables'];
+    }
+    if ( isset( $structured['metadata'] ) ) {
+        $response['metadata'] = $structured['metadata'];
+    }
+    if ( isset( $structured['notas'] ) ) {
+        $response['notas'] = $structured['notas'];
+    }
+    if ( isset( $structured['advertencias'] ) ) {
+        $response['advertencias'] = $structured['advertencias'];
+    }
+
+    return new WP_REST_Response( $response, 200 );
 }
 
 function tanviz_rest_save( WP_REST_Request $req ) {
