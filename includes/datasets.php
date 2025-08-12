@@ -2,21 +2,47 @@
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
 /**
- * Very simple dataset lister: reads from option 'tanviz_datasets_base' and returns a few common files
- * or allows manual listing via filter tanviz_dataset_candidates.
- * In production you may query GitHub API; here we keep it simple.
+ * Dataset lister: reads from option 'tanviz_datasets_base' and attempts to fetch
+ * available datasets from a GitHub repository. If it cannot fetch dynamically,
+ * it falls back to a few common candidate files or a filtered list via
+ * tanviz_dataset_candidates.
  */
 function tanviz_list_datasets() {
     $base = trailingslashit( get_option('tanviz_datasets_base','') );
-    $candidates = apply_filters('tanviz_dataset_candidates', [
-        'data.csv','data.json','sample.csv','sample.json'
-    ]);
-    $out = [];
-    if ( $base ) {
+    $out  = [];
+
+    if ( $base && preg_match('#https://raw.githubusercontent.com/([^/]+)/([^/]+)/([^/]+)/(.*)#', $base, $m) ) {
+        $owner  = $m[1];
+        $repo   = $m[2];
+        $branch = $m[3];
+        $path   = rtrim( $m[4], '/' );
+        $api_url = sprintf( 'https://api.github.com/repos/%s/%s/contents/%s?ref=%s',
+            $owner, $repo, $path, $branch );
+        $resp = wp_remote_get( $api_url, [ 'timeout' => 10, 'headers'=>['User-Agent'=>'TanViz'] ] );
+        if ( ! is_wp_error( $resp ) && 200 === wp_remote_retrieve_response_code( $resp ) ) {
+            $items = json_decode( wp_remote_retrieve_body( $resp ), true );
+            if ( is_array( $items ) ) {
+                foreach ( $items as $item ) {
+                    if ( isset( $item['type'] ) && $item['type'] === 'file' ) {
+                        $name = $item['name'];
+                        if ( preg_match( '/\.(csv|json)$/i', $name ) ) {
+                            $out[] = [ 'name' => $name, 'url' => $base . $name ];
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    if ( empty( $out ) && $base ) {
+        $candidates = apply_filters( 'tanviz_dataset_candidates', [
+            'data.csv','data.json','sample.csv','sample.json'
+        ] );
         foreach ( $candidates as $f ) {
             $out[] = [ 'name' => $f, 'url' => $base . $f ];
         }
     }
+
     return $out;
 }
 
