@@ -8,6 +8,7 @@ Admin‑only generator of **generative p5.js** visualizations using OpenAI **Res
 3. Go to **TanViz → Settings** and set:
    - OpenAI API Key.
    - OpenAI Model (default: `gpt-4o-2024-08-06`).
+   - OpenAI Assistant ID (optional).
    - GitHub Datasets Base (raw URL prefix, e.g. `https://raw.githubusercontent.com/user/repo/branch/path/`).
    - Overlay Logo URL (optional).
 
