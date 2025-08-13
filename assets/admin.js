@@ -12,15 +12,35 @@
     const $if = $('#tanviz-iframe');
     const doc = $if[0].contentWindow.document;
     const logo = TanVizCfg.logo || '';
+    $('#tanviz-console').text('');
     const html = `<!doctype html><html><head><meta charset="utf-8">
       <style>html,body{margin:0;height:100%;}#wrap{position:relative;height:100%;}
       #ovl{position:absolute;top:8px;left:8px;display:flex;align-items:center;gap:.5rem;font:14px/1.2 system-ui}
       #ovl img{height:24px}</style>
-      <script src="https://cdn.jsdelivr.net/npm/p5@1.9.0/lib/p5.min.js"></script></head>
+      <script src="https://cdn.jsdelivr.net/npm/p5@1.9.0/lib/p5.min.js"></script>
+      <script>
+        window.onerror = function(msg, src, line, col){
+          parent.postMessage({type:'tanviz-error', message: msg+' ('+line+':'+col+')'}, '*');
+        };
+        console.error = (function(orig){return function(){
+          parent.postMessage({type:'tanviz-error', message: Array.from(arguments).join(' ')}, '*');
+          return orig.apply(console, arguments);
+        };})(console.error);
+      </script></head>
       <body><div id="wrap"><div id="ovl"><img src="${logo}"/><div>${(title||'')}</div></div></div>
-      <script>${code}</script></body></html>`;
+      <script>
+        try{${code}}catch(e){parent.postMessage({type:'tanviz-error', message:e.message}, '*');}
+      </script></body></html>`;
     doc.open(); doc.write(html); doc.close();
   }
+
+  window.addEventListener('message', function(e){
+    if(e.data && e.data.type === 'tanviz-error'){
+      const $c = $('#tanviz-console');
+      const txt = $c.text();
+      $c.text(txt + (txt ? '\n' : '') + e.data.message);
+    }
+  });
 
   $(document).on('click','#tanviz-generate',function(e){
     e.preventDefault();
