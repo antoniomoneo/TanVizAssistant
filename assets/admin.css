@@ -1,5 +1,6 @@
 .tanviz-grid{display:grid;grid-template-columns:1fr;gap:1rem}
+@media(min-width:900px){.tanviz-grid{grid-template-columns:1fr 1fr}}
+@media(min-width:1200px){.tanviz-grid{grid-template-columns:1fr 1fr 1fr}}
 .tanviz-grid section{background:#fff;border:1px solid #ccd0d4;padding:1rem}
-.tanviz-wrap iframe{width:100%;height:300px;border:1px solid #ccd0d4}
-#tanviz-sample{max-height:200px;overflow:auto;background:#f8f8f8;padding:.5rem;border:1px solid #ccd0d4}
-#tanviz-rr{max-height:200px;overflow:auto;background:#f8f8f8;padding:.5rem;border:1px solid #ccd0d4}
+.tanviz-wrap iframe{width:100%;aspect-ratio:16/9;border:1px solid #ccd0d4}
+#tanviz-sample,#tanviz-rr,#tanviz-console{max-height:40vh;overflow:auto;background:#f8f8f8;padding:.5rem;border:1px solid #ccd0d4;white-space:pre-wrap}
