@@ -3,162 +3,28 @@ if ( ! defined( 'ABSPATH' ) ) { exit; }
 
 function tanviz_p5_json_schema() {
     return [
-        'title' => 'TanViz p5.js Sketch',
-        'type' => 'object',
-        'additionalProperties' => false,
+        'type'       => 'object',
         'properties' => [
             'codigo' => [
-                'type' => 'string',
-                'description' => 'Sketch p5.js (solo JS). Debe incluir function setup() y function draw(). Sin HTML.',
-                'minLength' => 50,
-                'maxLength' => 200000,
-                'pattern' => 'function\\s+setup\\s*\\(\\)[\\s\\S]*function\\s+draw\\s*\\(\\)',
-                // Prohibimos etiquetas HTML básicas mediante negación explícita
-                'allOf' => [
-                    [
-                        'not' => [
-                            'type'    => 'string',
-                            'pattern' => '<\\s*(html|head|body|script|style)\\b',
-                        ],
-                    ],
-                ],
+                'type'        => 'string',
+                'description' => 'Código p5.js que genera la visualización.',
             ],
-            'variables' => [
-                'type' => 'array',
-                'minItems' => 1,
-                'maxItems' => 60,
-                'items' => [
-                    'type' => 'object',
-                    'additionalProperties' => false,
-                    'properties' => [
-                        'key' => [
-                            'type' => 'string',
-                            'description' => 'Identificador usado en el código.',
-                            'pattern' => '^[A-Za-z_][A-Za-z0-9_\\-]*$',
-                            'minLength' => 2,
-                            'maxLength' => 64,
-                        ],
-                        'label' => [ 'type' => 'string', 'minLength' => 1, 'maxLength' => 120 ],
-                        'type' => [
-                            'type' => 'string',
-                            'enum' => [ 'number', 'select', 'text', 'boolean', 'color', 'range' ],
-                        ],
-                        'default' => [ 'type' => [ 'number', 'string', 'boolean' ] ],
-                        'min' => [ 'type' => 'number' ],
-                        'max' => [ 'type' => 'number' ],
-                        'step' => [ 'type' => 'number' ],
-                        'options' => [
-                            'type' => 'array',
-                            'description' => 'Opciones para select',
-                            'minItems' => 1,
-                            'maxItems' => 50,
-                            'items' => [
-                                'anyOf' => [
-                                    [ 'type' => 'string' ],
-                                    [ 'type' => 'number' ],
-                                ],
-                            ],
-                        ],
-                        'description' => [ 'type' => 'string', 'maxLength' => 400 ],
-                    ],
-                    'required' => [ 'key', 'label', 'type', 'default' ],
-                    'anyOf' => [
-                        [
-                            'type' => 'object',
-                            'additionalProperties' => false,
-                            'properties' => [
-                                'type' => [ 'const' => 'number' ],
-                                'default' => [ 'type' => 'number' ],
-                            ],
-                            'required' => [ 'type', 'default' ],
-                        ],
-                        [
-                            'type' => 'object',
-                            'additionalProperties' => false,
-                            'properties' => [
-                                'type'    => [ 'const' => 'range' ],
-                                'default' => [ 'type' => 'number' ],
-                                'min'     => [ 'type' => 'number' ],
-                                'max'     => [ 'type' => 'number' ],
-                                'step'    => [ 'type' => 'number' ],
-                            ],
-                            'required' => [ 'type', 'default', 'min', 'max', 'step' ],
-                        ],
-                        [
-                            'type' => 'object',
-                            'additionalProperties' => false,
-                            'properties' => [
-                                'type'    => [ 'const' => 'boolean' ],
-                                'default' => [ 'type' => 'boolean' ],
-                            ],
-                            'required' => [ 'type', 'default' ],
-                        ],
-                        [
-                            'type' => 'object',
-                            'additionalProperties' => false,
-                            'properties' => [
-                                'type'    => [ 'const' => 'text' ],
-                                'default' => [ 'type' => 'string' ],
-                            ],
-                            'required' => [ 'type', 'default' ],
-                        ],
-                        [
-                            'type' => 'object',
-                            'additionalProperties' => false,
-                            'properties' => [
-                                'type'    => [ 'const' => 'color' ],
-                                'default' => [ 'type' => 'string', 'pattern' => '^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$' ],
-                            ],
-                            'required' => [ 'type', 'default' ],
-                        ],
-                        [
-                            'type' => 'object',
-                            'additionalProperties' => false,
-                            'properties' => [
-                                'type'    => [ 'const' => 'select' ],
-                                'default' => [
-                                    'anyOf' => [
-                                        [ 'type' => 'string' ],
-                                        [ 'type' => 'number' ],
-                                    ],
-                                ],
-                                'options' => [
-                                    'type' => 'array',
-                                    'minItems' => 1,
-                                    'items' => [
-                                        'anyOf' => [
-                                            [ 'type' => 'string' ],
-                                            [ 'type' => 'number' ],
-                                        ],
-                                    ],
-                                ],
-                            ],
-                            'required' => [ 'type', 'default', 'options' ],
-                        ],
-                    ],
-                ],
+            'titulo' => [
+                'type'        => 'string',
+                'description' => 'Nombre o título de la visualización.',
             ],
-            'metadata' => [
-                'type' => 'object',
-                'additionalProperties' => false,
-                'properties' => [
-                    'titulo' => [ 'type' => 'string', 'maxLength' => 140 ],
-                    'descripcion' => [ 'type' => 'string', 'maxLength' => 400 ],
-                    'requiereDataset' => [ 'type' => 'boolean' ],
-                    'columnasUsadas' => [
-                        'type' => 'array',
-                        'maxItems' => 50,
-                        'items' => [ 'type' => 'string', 'minLength' => 1, 'maxLength' => 120 ],
-                    ],
-                ],
+            'descripcion' => [
+                'type'        => 'string',
+                'description' => 'Descripción breve de la visualización.',
             ],
-            'notas' => [ 'type' => 'string', 'maxLength' => 800 ],
-            'advertencias' => [
-                'type' => 'array',
-                'maxItems' => 20,
-                'items' => [ 'type' => 'string', 'maxLength' => 300 ],
+            'tags' => [
+                'type'        => 'array',
+                'description' => 'Palabras clave para clasificar la visualización.',
+                'items'       => [
+                    'type' => 'string',
+                ],
             ],
         ],
-        'required' => [ 'codigo', 'variables' ],
+        'required' => [ 'codigo', 'titulo' ],
     ];
 }

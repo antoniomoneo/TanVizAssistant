@@ -101,20 +101,17 @@ function tanviz_rest_generate( WP_REST_Request $req ) {
     $code_p5 = tanviz_normalize_p5_code( $structured['codigo'] );
 
     $response = [
-        'ok'      => true,
-        'codigo'  => $code_p5,
+        'ok'     => true,
+        'codigo' => $code_p5,
     ];
-    if ( isset( $structured['variables'] ) ) {
-        $response['variables'] = $structured['variables'];
+    if ( isset( $structured['titulo'] ) ) {
+        $response['titulo'] = $structured['titulo'];
     }
-    if ( isset( $structured['metadata'] ) ) {
-        $response['metadata'] = $structured['metadata'];
+    if ( isset( $structured['descripcion'] ) ) {
+        $response['descripcion'] = $structured['descripcion'];
     }
-    if ( isset( $structured['notas'] ) ) {
-        $response['notas'] = $structured['notas'];
-    }
-    if ( isset( $structured['advertencias'] ) ) {
-        $response['advertencias'] = $structured['advertencias'];
+    if ( isset( $structured['tags'] ) ) {
+        $response['tags'] = $structured['tags'];
     }
 
     return new WP_REST_Response( $response, 200 );
