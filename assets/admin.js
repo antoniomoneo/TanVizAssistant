@@ -37,9 +37,11 @@
       data: JSON.stringify(body),
     }).done(function(resp){
       $('#tanviz-rr').text(JSON.stringify({request:body,response:resp},null,2));
-      if (resp && resp.structured && resp.structured.code){
-        setCode(resp.structured.code);
-        writeIframe(resp.structured.code, $('#tanviz-title').val() || (resp.structured.meta && resp.structured.meta.title));
+      const code = resp && (resp.codigo || (resp.structured && resp.structured.code));
+      if (code){
+        setCode(code);
+        const title = $('#tanviz-title').val() || resp.titulo || (resp.structured && resp.structured.meta && resp.structured.meta.title);
+        writeIframe(code, title);
       }
     }).fail(function(xhr){
       $('#tanviz-rr').text(xhr.responseText || 'Error');
