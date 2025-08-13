@@ -61,48 +61,53 @@ function tanviz_p5_json_schema() {
                         'description' => [ 'type' => 'string', 'maxLength' => 400 ],
                     ],
                     'required' => [ 'key', 'label', 'type', 'default' ],
-                    'allOf' => [
+                    'anyOf' => [
                         [
-                            'if' => [ 'properties' => [ 'type' => [ 'const' => 'number' ] ], 'required' => [ 'type' ] ],
-                            'then' => [ 'properties' => [ 'default' => [ 'type' => 'number' ] ] ],
-                        ],
-                        [
-                            'if' => [ 'properties' => [ 'type' => [ 'const' => 'range' ] ], 'required' => [ 'type' ] ],
-                            'then' => [
-                                'required' => [ 'min', 'max', 'step' ],
-                                'properties' => [
-                                    'default' => [ 'type' => 'number' ],
-                                    'min' => [ 'type' => 'number' ],
-                                    'max' => [ 'type' => 'number' ],
-                                    'step' => [ 'type' => 'number' ],
-                                ],
+                            'properties' => [
+                                'type'    => [ 'const' => 'number' ],
+                                'default' => [ 'type' => 'number' ],
                             ],
                         ],
                         [
-                            'if' => [ 'properties' => [ 'type' => [ 'const' => 'boolean' ] ], 'required' => [ 'type' ] ],
-                            'then' => [ 'properties' => [ 'default' => [ 'type' => 'boolean' ] ] ],
+                            'properties' => [
+                                'type'    => [ 'const' => 'range' ],
+                                'default' => [ 'type' => 'number' ],
+                                'min'     => [ 'type' => 'number' ],
+                                'max'     => [ 'type' => 'number' ],
+                                'step'    => [ 'type' => 'number' ],
+                            ],
+                            'required' => [ 'min', 'max', 'step' ],
                         ],
                         [
-                            'if' => [ 'properties' => [ 'type' => [ 'const' => 'text' ] ], 'required' => [ 'type' ] ],
-                            'then' => [ 'properties' => [ 'default' => [ 'type' => 'string' ] ] ],
+                            'properties' => [
+                                'type'    => [ 'const' => 'boolean' ],
+                                'default' => [ 'type' => 'boolean' ],
+                            ],
                         ],
                         [
-                            'if' => [ 'properties' => [ 'type' => [ 'const' => 'color' ] ], 'required' => [ 'type' ] ],
-                            'then' => [ 'properties' => [ 'default' => [ 'type' => 'string', 'pattern' => '^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$' ] ] ],
+                            'properties' => [
+                                'type'    => [ 'const' => 'text' ],
+                        
+                                'default' => [ 'type' => 'string' ],
+                            ],
                         ],
                         [
-                            'if' => [ 'properties' => [ 'type' => [ 'const' => 'select' ] ], 'required' => [ 'type' ] ],
-                            'then' => [
-                                'required' => [ 'options' ],
-                                'properties' => [
-                                    'default' => [
-                                        'anyOf' => [
-                                            [ 'type' => 'string' ],
-                                            [ 'type' => 'number' ],
-                                        ],
+                            'properties' => [
+                                'type'    => [ 'const' => 'color' ],
+                                'default' => [ 'type' => 'string', 'pattern' => '^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$' ],
+                            ],
+                        ],
+                        [
+                            'properties' => [
+                                'type'    => [ 'const' => 'select' ],
+                                'default' => [
+                                    'anyOf' => [
+                                        [ 'type' => 'string' ],
+                                        [ 'type' => 'number' ],
                                     ],
                                 ],
                             ],
+                            'required' => [ 'options' ],
                         ],
                     ],
                 ],
