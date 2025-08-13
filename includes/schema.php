@@ -63,12 +63,16 @@ function tanviz_p5_json_schema() {
                     'required' => [ 'key', 'label', 'type', 'default' ],
                     'anyOf' => [
                         [
+                            'type' => 'object',
+                            'additionalProperties' => false,
                             'properties' => [
                                 'type'    => [ 'const' => 'number' ],
                                 'default' => [ 'type' => 'number' ],
                             ],
                         ],
                         [
+                            'type' => 'object',
+                            'additionalProperties' => false,
                             'properties' => [
                                 'type'    => [ 'const' => 'range' ],
                                 'default' => [ 'type' => 'number' ],
@@ -79,25 +83,32 @@ function tanviz_p5_json_schema() {
                             'required' => [ 'min', 'max', 'step' ],
                         ],
                         [
+                            'type' => 'object',
+                            'additionalProperties' => false,
                             'properties' => [
                                 'type'    => [ 'const' => 'boolean' ],
                                 'default' => [ 'type' => 'boolean' ],
                             ],
                         ],
                         [
+                            'type' => 'object',
+                            'additionalProperties' => false,
                             'properties' => [
                                 'type'    => [ 'const' => 'text' ],
-                        
                                 'default' => [ 'type' => 'string' ],
                             ],
                         ],
                         [
+                            'type' => 'object',
+                            'additionalProperties' => false,
                             'properties' => [
                                 'type'    => [ 'const' => 'color' ],
                                 'default' => [ 'type' => 'string', 'pattern' => '^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$' ],
                             ],
                         ],
                         [
+                            'type' => 'object',
+                            'additionalProperties' => false,
                             'properties' => [
                                 'type'    => [ 'const' => 'select' ],
                                 'default' => [
