@@ -13,7 +13,7 @@ function tanviz_p5_json_schema() {
                 'description' => 'Sketch p5.js (solo JS). Debe incluir function setup() y function draw(). Sin HTML.',
                 'minLength' => 50,
                 'maxLength' => 200000,
-                'pattern' => '(?s)function\\s+setup\\s*\\(\\)[\\s\\S]*function\\s+draw\\s*\\(\\)',
+                'pattern' => 'function\\s+setup\\s*\\(\\)[\\s\\S]*function\\s+draw\\s*\\(\\)',
                 // Ensure prohibited HTML tags are not present. The subschema used in
                 // the "not" keyword must explicitly declare its type to satisfy
                 // the API's JSON schema validator.
@@ -42,7 +42,7 @@ function tanviz_p5_json_schema() {
                             'type' => 'string',
                             'enum' => [ 'number', 'select', 'text', 'boolean', 'color', 'range' ],
                         ],
-                        'default' => (object) [],
+                        'default' => [ 'type' => [ 'number', 'string', 'boolean' ] ],
                         'min' => [ 'type' => 'number' ],
                         'max' => [ 'type' => 'number' ],
                         'step' => [ 'type' => 'number' ],
