@@ -14,7 +14,13 @@ function tanviz_p5_json_schema() {
                 'minLength' => 50,
                 'maxLength' => 200000,
                 'pattern' => '(?s)function\\s+setup\\s*\\(\\)[\\s\\S]*function\\s+draw\\s*\\(\\)',
-                'not' => [ 'pattern' => '<\\s*(html|head|body|script|style)\\b' ],
+                // Ensure prohibited HTML tags are not present. The subschema used in
+                // the "not" keyword must explicitly declare its type to satisfy
+                // the API's JSON schema validator.
+                'not' => [
+                    'type'    => 'string',
+                    'pattern' => '<\\s*(html|head|body|script|style)\\b',
+                ],
             ],
             'variables' => [
                 'type' => 'array',
