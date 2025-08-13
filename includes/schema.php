@@ -3,7 +3,6 @@ if ( ! defined( 'ABSPATH' ) ) { exit; }
 
 function tanviz_p5_json_schema() {
     return [
-        '$schema' => 'https://json-schema.org/draft/2020-12/schema',
         'title' => 'TanViz p5.js Sketch',
         'type' => 'object',
         'additionalProperties' => false,
@@ -14,12 +13,14 @@ function tanviz_p5_json_schema() {
                 'minLength' => 50,
                 'maxLength' => 200000,
                 'pattern' => 'function\\s+setup\\s*\\(\\)[\\s\\S]*function\\s+draw\\s*\\(\\)',
-                // Ensure prohibited HTML tags are not present. The subschema used in
-                // the "not" keyword must explicitly declare its type to satisfy
-                // the API's JSON schema validator.
-                'not' => [
-                    'type'    => 'string',
-                    'pattern' => '<\\s*(html|head|body|script|style)\\b',
+                // Prohibimos etiquetas HTML básicas mediante negación explícita
+                'allOf' => [
+                    [
+                        'not' => [
+                            'type'    => 'string',
+                            'pattern' => '<\\s*(html|head|body|script|style)\\b',
+                        ],
+                    ],
                 ],
             ],
             'variables' => [
@@ -66,59 +67,73 @@ function tanviz_p5_json_schema() {
                             'type' => 'object',
                             'additionalProperties' => false,
                             'properties' => [
-                                'type' => [ 'type' => 'string', 'const' => 'number' ],
+                                'type' => [ 'const' => 'number' ],
                                 'default' => [ 'type' => 'number' ],
                             ],
+                            'required' => [ 'type', 'default' ],
                         ],
                         [
                             'type' => 'object',
                             'additionalProperties' => false,
                             'properties' => [
-                                'type' => [ 'type' => 'string', 'const' => 'range' ],
+                                'type'    => [ 'const' => 'range' ],
                                 'default' => [ 'type' => 'number' ],
                                 'min'     => [ 'type' => 'number' ],
                                 'max'     => [ 'type' => 'number' ],
                                 'step'    => [ 'type' => 'number' ],
                             ],
-                            'required' => [ 'min', 'max', 'step' ],
+                            'required' => [ 'type', 'default', 'min', 'max', 'step' ],
                         ],
                         [
                             'type' => 'object',
                             'additionalProperties' => false,
                             'properties' => [
-                                'type' => [ 'type' => 'string', 'const' => 'boolean' ],
+                                'type'    => [ 'const' => 'boolean' ],
                                 'default' => [ 'type' => 'boolean' ],
                             ],
+                            'required' => [ 'type', 'default' ],
                         ],
                         [
                             'type' => 'object',
                             'additionalProperties' => false,
                             'properties' => [
-                                'type' => [ 'type' => 'string', 'const' => 'text' ],
+                                'type'    => [ 'const' => 'text' ],
                                 'default' => [ 'type' => 'string' ],
                             ],
+                            'required' => [ 'type', 'default' ],
                         ],
                         [
                             'type' => 'object',
                             'additionalProperties' => false,
                             'properties' => [
-                                'type' => [ 'type' => 'string', 'const' => 'color' ],
+                                'type'    => [ 'const' => 'color' ],
                                 'default' => [ 'type' => 'string', 'pattern' => '^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$' ],
                             ],
+                            'required' => [ 'type', 'default' ],
                         ],
                         [
                             'type' => 'object',
                             'additionalProperties' => false,
                             'properties' => [
-                                'type' => [ 'type' => 'string', 'const' => 'select' ],
+                                'type'    => [ 'const' => 'select' ],
                                 'default' => [
                                     'anyOf' => [
                                         [ 'type' => 'string' ],
                                         [ 'type' => 'number' ],
                                     ],
                                 ],
+                                'options' => [
+                                    'type' => 'array',
+                                    'minItems' => 1,
+                                    'items' => [
+                                        'anyOf' => [
+                                            [ 'type' => 'string' ],
+                                            [ 'type' => 'number' ],
+                                        ],
+                                    ],
+                                ],
                             ],
-                            'required' => [ 'options' ],
+                            'required' => [ 'type', 'default', 'options' ],
                         ],
                     ],
                 ],
@@ -132,8 +147,8 @@ function tanviz_p5_json_schema() {
                     'requiereDataset' => [ 'type' => 'boolean' ],
                     'columnasUsadas' => [
                         'type' => 'array',
-                        'items' => [ 'type' => 'string' ],
                         'maxItems' => 50,
+                        'items' => [ 'type' => 'string', 'minLength' => 1, 'maxLength' => 120 ],
                     ],
                 ],
             ],
