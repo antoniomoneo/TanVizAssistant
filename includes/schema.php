@@ -26,5 +26,6 @@ function tanviz_p5_json_schema() {
             ],
         ],
         'required' => [ 'codigo', 'titulo' ],
+        'additionalProperties' => false,
     ];
 }
