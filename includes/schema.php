@@ -66,7 +66,7 @@ function tanviz_p5_json_schema() {
                             'type' => 'object',
                             'additionalProperties' => false,
                             'properties' => [
-                                'type'    => [ 'const' => 'number' ],
+                                'type' => [ 'type' => 'string', 'const' => 'number' ],
                                 'default' => [ 'type' => 'number' ],
                             ],
                         ],
@@ -74,7 +74,7 @@ function tanviz_p5_json_schema() {
                             'type' => 'object',
                             'additionalProperties' => false,
                             'properties' => [
-                                'type'    => [ 'const' => 'range' ],
+                                'type' => [ 'type' => 'string', 'const' => 'range' ],
                                 'default' => [ 'type' => 'number' ],
                                 'min'     => [ 'type' => 'number' ],
                                 'max'     => [ 'type' => 'number' ],
@@ -86,7 +86,7 @@ function tanviz_p5_json_schema() {
                             'type' => 'object',
                             'additionalProperties' => false,
                             'properties' => [
-                                'type'    => [ 'const' => 'boolean' ],
+                                'type' => [ 'type' => 'string', 'const' => 'boolean' ],
                                 'default' => [ 'type' => 'boolean' ],
                             ],
                         ],
@@ -94,7 +94,7 @@ function tanviz_p5_json_schema() {
                             'type' => 'object',
                             'additionalProperties' => false,
                             'properties' => [
-                                'type'    => [ 'const' => 'text' ],
+                                'type' => [ 'type' => 'string', 'const' => 'text' ],
                                 'default' => [ 'type' => 'string' ],
                             ],
                         ],
@@ -102,7 +102,7 @@ function tanviz_p5_json_schema() {
                             'type' => 'object',
                             'additionalProperties' => false,
                             'properties' => [
-                                'type'    => [ 'const' => 'color' ],
+                                'type' => [ 'type' => 'string', 'const' => 'color' ],
                                 'default' => [ 'type' => 'string', 'pattern' => '^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$' ],
                             ],
                         ],
@@ -110,7 +110,7 @@ function tanviz_p5_json_schema() {
                             'type' => 'object',
                             'additionalProperties' => false,
                             'properties' => [
-                                'type'    => [ 'const' => 'select' ],
+                                'type' => [ 'type' => 'string', 'const' => 'select' ],
                                 'default' => [
                                     'anyOf' => [
                                         [ 'type' => 'string' ],
