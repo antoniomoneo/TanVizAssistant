@@ -47,7 +47,7 @@ function tanviz_render_sandbox(){
       <div class="tanviz-grid">
         <section>
           <h2><?php echo esc_html__('Prompt','TanViz'); ?></h2>
-          <textarea id="tanviz-prompt" rows="6" class="large-text" placeholder="Describe the generative p5.js visualization you want..."></textarea>
+          <textarea id="tanviz-prompt" rows="6" class="large-text" placeholder="Describe the generative p5.js visualization you want...">crea el código de una visualización generativa impactante sobre el dataset adjunto</textarea>
           <h2><?php echo esc_html__('Dataset','TanViz'); ?></h2>
           <select id="tanviz-dataset">
             <option value=""><?php echo esc_html__('-- choose --','TanViz'); ?></option>
@@ -77,7 +77,7 @@ function tanviz_render_sandbox(){
           <h2><?php echo esc_html__('Preview','TanViz'); ?></h2>
           <iframe id="tanviz-iframe" sandbox="allow-scripts allow-same-origin"></iframe>
           <h2><?php echo esc_html__('Console','TanViz'); ?></h2>
-          <pre id="tanviz-console"></pre>
+          <pre id="tanviz-console"></pre><p><button class="button" id="tanviz-copy-console"><?php echo esc_html__('Copy','TanViz'); ?></button></p>
         </section>
       </div>
     </div>
