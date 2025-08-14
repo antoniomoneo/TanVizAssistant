@@ -52,11 +52,13 @@ final class Schema
                         'column_roles' => [
                             'type' => 'object',
                             'additionalProperties' => false,
-                            'required' => ['year', 'value'],
+                            // Include all keys in "required" to satisfy OpenAI's JSON schema validator
+                            'required' => ['year', 'value', 'optional'],
                             'properties' => [
                                 'year' => ['type' => 'array', 'items' => ['type' => 'string'], 'minItems' => 1],
                                 'value' => ['type' => 'array', 'items' => ['type' => 'string'], 'minItems' => 1],
-                                'optional' => ['type' => 'array', 'items' => ['type' => 'string']],
+                                // Ensure the model always returns an array, even if empty
+                                'optional' => ['type' => 'array', 'items' => ['type' => 'string'], 'default' => []],
                             ],
                         ],
                     ],
