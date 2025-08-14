@@ -18,6 +18,7 @@ function tanviz_admin_assets( $hook ){
             'datasets' => esc_url_raw( rest_url('TanViz/v1/datasets') ),
             'sample'   => esc_url_raw( rest_url('TanViz/v1/sample') ),
             'save'     => esc_url_raw( rest_url('TanViz/v1/save') ),
+            'fix'      => esc_url_raw( rest_url('TanViz/v1/fix') ),
         ],
         'nonce' => wp_create_nonce('wp_rest'),
         'logo'  => esc_url( get_option('tanviz_logo_url', TANVIZ_URL.'assets/logo.png') ),
@@ -62,7 +63,8 @@ function tanviz_render_sandbox(){
         <section>
           <h2><?php echo esc_html__('Code (p5.js)','TanViz'); ?></h2>
           <textarea id="tanviz-code" rows="18" class="large-text code"></textarea>
-          <p><button class="button" id="tanviz-copy-code"><?php echo esc_html__('Copy code','TanViz'); ?></button></p>
+          <p><button class="button" id="tanviz-copy-code"><?php echo esc_html__('Copy code','TanViz'); ?></button>
+             <button class="button" id="tanviz-fix"><?php echo esc_html__('Fix','TanViz'); ?></button></p>
           <details id="tanviz-rr-wrap"><summary><?php echo esc_html__( 'Request/Response', 'TanViz' ); ?></summary><pre id="tanviz-rr"></pre><p><button class="button" id="tanviz-copy-rr"><?php echo esc_html__('Copy','TanViz'); ?></button></p></details>
         </section>
         <section>
