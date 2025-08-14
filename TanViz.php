@@ -20,7 +20,6 @@ define( 'TANVIZ_URL',  plugin_dir_url( __FILE__ ) );
 add_action( 'plugins_loaded', function () {
     $files = [
         'includes/settings.php',
-        'includes/schema.php',
         'includes/structured.php',
         'includes/datasets.php',
         'includes/rest.php',
