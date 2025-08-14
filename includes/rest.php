@@ -107,13 +107,15 @@ function tanviz_rest_generate( WP_REST_Request $req ) {
     $payload = [
         'model' => $model,
         'input' => $input,
-        'response_format' => $format,
+        'text'  => [
+            'format' => $format,
+        ],
     ];
 
-    if ( ! isset( $payload['response_format']['json_schema']['schema'] ) || ! is_array( $payload['response_format']['json_schema']['schema'] ) ) {
+    if ( ! isset( $payload['text']['format']['json_schema']['schema'] ) || ! is_array( $payload['text']['format']['json_schema']['schema'] ) ) {
         wp_send_json_error([
-            'message' => 'response_format.json_schema.schema no es un array antes del envío.',
-            'debug'   => $payload['response_format'],
+            'message' => 'text.format.json_schema.schema no es un array antes del envío.',
+            'debug'   => $payload['text']['format'],
         ], 500 );
     }
 
