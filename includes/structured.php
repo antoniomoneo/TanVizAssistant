@@ -52,6 +52,9 @@ function tanviz_is_valid_p5( $code ) {
 function tanviz_normalize_p5_code( $code ) {
     $code = preg_replace('/^```(?:p5|javascript|js)?\s*|\s*```$/m', '', $code);
     $code = preg_replace('#<\s*/?\s*script[^>]*>#i', '', $code);
+    // Strip multiline and single-line JS comments
+    $code = preg_replace('~/\*.*?\*/~s', '', $code);
+    $code = preg_replace('~(?<!:)//.*$~m', '', $code);
     return trim($code);
 }
 

@@ -147,6 +147,13 @@
     navigator.clipboard.writeText(getCode()).then(()=>alert('Copied'));
   });
 
+  $(document).on('click','#tanviz-run',function(e){
+    e.preventDefault();
+    const code = getCode();
+    const title = $('#tanviz-title').val();
+    writeIframe(code, title);
+  });
+
   $(document).on('click','#tanviz-fix',function(e){
     e.preventDefault();
     const code = getCode();
@@ -159,6 +166,7 @@
       contentType: 'application/json',
       data: JSON.stringify({ code })
     }).done(function(resp){
+      $('#tanviz-rr').text(JSON.stringify({request:{code},response:resp},null,2));
       const fixed = resp && resp.codigo;
       if (fixed){
         setCode(fixed);
