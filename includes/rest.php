@@ -4,6 +4,14 @@ if ( ! defined( 'ABSPATH' ) ) { exit; }
 require_once TANVIZ_PATH . 'includes/structured.php';
 require_once TANVIZ_PATH . 'includes/datasets.php';
 
+// Attempt to load the OpenAI PHP SDK if it's bundled with the plugin.
+if ( ! class_exists( '\\OpenAI\\Client' ) ) {
+    $autoload = TANVIZ_PATH . 'vendor/autoload.php';
+    if ( is_readable( $autoload ) ) {
+        require_once $autoload;
+    }
+}
+
 add_action('rest_api_init', function(){
     register_rest_route('TanViz/v1','/generate',[
         'methods'  => 'POST',
@@ -71,6 +79,10 @@ function tanviz_rest_generate( WP_REST_Request $req ) {
         $schema = json_decode( $schema_data, true );
     } else {
         $schema = $schema_data;
+    }
+
+    if ( ! class_exists( '\OpenAI\Client' ) ) {
+        wp_send_json_error( [ 'message' => 'OpenAI PHP SDK not installed' ], 500 );
     }
 
     $client = new OpenAI\Client( $api_key );
