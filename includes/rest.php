@@ -66,9 +66,8 @@ function tanviz_rest_generate( WP_REST_Request $req ) {
         'input' => tanviz_build_user_content( $dataset_url, $prompt, 20 ),
         'text'  => [
             'format' => [
-                'type'   => 'json_schema',
-                'name'   => 'tanviz_p5_visualizacion',
-                'schema' => $schema,
+                'name'        => 'json_schema',
+                'json_schema' => $schema,
             ],
         ],
     ];
