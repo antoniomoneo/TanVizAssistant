@@ -32,3 +32,33 @@ Admin‑only generator of **generative p5.js** visualizations using OpenAI **Res
 - GIF export relies on `gif.js` and may fail with cross‑origin assets or heavy animations.
 - Dataset listing is a simple file list; adjust via the `tanviz_dataset_candidates` filter for custom repos.
 - Keep your API key server‑side. The plugin never exposes it to the browser.
+
+## Troubleshooting dataset loading
+
+If the preview console shows `Script error (0,0)`, the CSV likely failed to download due to cross‑origin restrictions. Run the sketch from a web server instead of opening the file directly:
+
+```bash
+npx http-server
+# or
+python3 -m http.server
+```
+
+Add an error callback to `loadTable` to inspect failures:
+
+```javascript
+table = loadTable(
+  'https://raw.githubusercontent.com/antoniomoneo/Datasets/main/temperaturas_anomalias_1880_2024.csv',
+  'csv',
+  'header',
+  () => console.log('Tabla cargada'),
+  err => console.error('Error cargando la tabla:', err)
+);
+```
+
+If the remote CSV remains inaccessible, download it and load it locally:
+
+```javascript
+table = loadTable('temperaturas_anomalias_1880_2024.csv', 'csv', 'header');
+```
+
+See `examples/temperature-anomaly` for a complete sketch demonstrating these steps.
