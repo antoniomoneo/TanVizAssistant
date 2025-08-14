@@ -4,7 +4,8 @@ if ( ! defined( 'ABSPATH' ) ) { exit; }
 require_once TANVIZ_PATH . 'includes/structured.php';
 require_once TANVIZ_PATH . 'includes/datasets.php';
 
-// Attempt to load the OpenAI PHP SDK if it's bundled with the plugin.
+// Attempt to load the OpenAI PHP SDK if it's bundled with the plugin. The
+// plugin will fall back to the WordPress HTTP API if the SDK isn't available.
 if ( ! class_exists( '\\OpenAI\\Client' ) ) {
     $autoload = TANVIZ_PATH . 'vendor/autoload.php';
     if ( is_readable( $autoload ) ) {
@@ -81,30 +82,53 @@ function tanviz_rest_generate( WP_REST_Request $req ) {
         $schema = $schema_data;
     }
 
-    if ( ! class_exists( '\OpenAI\Client' ) ) {
-        wp_send_json_error( [ 'message' => 'OpenAI PHP SDK not installed' ], 500 );
-    }
-
-    $client = new OpenAI\Client( $api_key );
-
-    try {
-        $response = $client->responses->create([
-            'model' => $model,
-            'input' => $prompt,
-            'text'  => [
-                'format' => [
-                    'type' => 'json_schema',
-                    'json_schema' => [
-                        'name'   => 'TanVizResponse',
-                        'schema' => $schema,
-                        'strict' => true,
-                    ],
+    $payload = [
+        'model' => $model,
+        'input' => $prompt,
+        'text'  => [
+            'format' => [
+                'type' => 'json_schema',
+                'json_schema' => [
+                    'name'   => 'TanVizResponse',
+                    'schema' => $schema,
+                    'strict' => true,
                 ],
             ],
-            // 'max_output_tokens' => 2048,
-        ]);
+        ],
+        // 'max_output_tokens' => 2048,
+    ];
 
-        $out = $response->output[0]->content[0]->text ?? null;
+    try {
+        if ( class_exists( '\\OpenAI\\Client' ) ) {
+            $client   = new OpenAI\Client( $api_key );
+            $response = $client->responses->create( $payload );
+            $body     = [
+                'output' => $response->output,
+            ];
+        } else {
+            $request_args = [
+                'headers' => [
+                    'Authorization' => 'Bearer ' . $api_key,
+                    'Content-Type'  => 'application/json',
+                ],
+                'body'    => wp_json_encode( $payload ),
+                'timeout' => 60,
+            ];
+
+            $response = wp_remote_post( 'https://api.openai.com/v1/responses', $request_args );
+            if ( is_wp_error( $response ) ) {
+                throw new \RuntimeException( $response->get_error_message() );
+            }
+
+            $code = wp_remote_retrieve_response_code( $response );
+            $body = json_decode( wp_remote_retrieve_body( $response ), true );
+            if ( $code >= 400 || isset( $body['error'] ) ) {
+                $msg = is_array( $body ) && isset( $body['error']['message'] ) ? $body['error']['message'] : 'OpenAI request failed';
+                throw new \RuntimeException( $msg );
+            }
+        }
+
+        $out = $body['output'][0]['content'][0]['text'] ?? null;
         if ( ! $out ) {
             throw new \RuntimeException( 'No text output from Responses API' );
         }
@@ -130,8 +154,6 @@ function tanviz_rest_generate( WP_REST_Request $req ) {
         }
 
         wp_send_json_success( $result );
-    } catch ( \OpenAI\Exceptions\ErrorException $e ) {
-        wp_send_json_error( $e->getPayload(), 500 );
     } catch ( \Throwable $e ) {
         wp_send_json_error([
             'message' => $e->getMessage(),
