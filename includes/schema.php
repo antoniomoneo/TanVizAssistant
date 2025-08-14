@@ -9,8 +9,14 @@ return [
         'ok' => ['type' => 'boolean', 'const' => true],
         'codigo' => ['type' => 'string', 'minLength' => 1],
         'descripcion' => ['type' => 'string'],
-        'dataset_contract' => ['type' => 'object'],
-        'placeholders' => ['type' => 'object'],
+        'dataset_contract' => [
+            'type' => 'object',
+            'additionalProperties' => false,
+        ],
+        'placeholders' => [
+            'type' => 'object',
+            'additionalProperties' => ['type' => 'string'],
+        ],
         'checks' => ['type' => 'array', 'items' => ['type' => 'string']],
     ],
 ];
