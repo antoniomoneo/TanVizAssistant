@@ -4,62 +4,28 @@ if ( ! defined( 'ABSPATH' ) ) { exit; }
 require_once TANVIZ_PATH . 'includes/structured.php';
 require_once TANVIZ_PATH . 'includes/datasets.php';
 
-// JSON schema for TanViz responses
+// JSON schema for TanViz responses (minimal version)
 $tanviz_schema = [
-    '$schema' => 'https://json-schema.org/draft/2020-12/schema',
-    'title' => 'TanVizResponse',
     'type' => 'object',
     'additionalProperties' => false,
+    'required' => ['codigo', 'variables', 'metadata'],
     'properties' => [
-        'ok' => ['type' => 'boolean'],
-        'codigo' => ['type' => 'string', 'minLength' => 1],
-        'descripcion' => ['type' => 'string', 'minLength' => 1],
-        'dataset_contract' => [
-            'type' => 'object',
-            'additionalProperties' => false,
-            'properties' => [
-                'dataset_url' => ['type' => 'string', 'format' => 'uri'],
-                'columns' => [
-                    'type' => 'object',
-                    'additionalProperties' => true,
-                    'description' => 'Mapa de alias de columnas, p.ej. {"year":"Año","value":"Valor"}',
-                ],
-                'requirements' => [
-                    'type' => 'object',
-                    'additionalProperties' => false,
-                    'properties' => [
-                        'must_include_tokens' => [
-                            'type' => 'array',
-                            'items' => ['type' => 'string'],
-                            'description' => 'Tokens/literales que deben aparecer en el código (p.ej. {{DATASET_URL}}, {{col.year}}, {{col.value}}, yearMin, yearMax)',
-                        ],
-                    ],
-                    'required' => ['must_include_tokens'],
-                ],
-            ],
-            'required' => ['dataset_url', 'columns', 'requirements'],
-        ],
-        'placeholders' => [
+        'codigo' => [ 'type' => 'string' ],
+        'variables' => [
             'type' => 'array',
             'items' => [
                 'type' => 'object',
-                'additionalProperties' => false,
                 'properties' => [
-                    'key' => ['type' => 'string', 'minLength' => 1],
-                    'description' => ['type' => 'string'],
+                    'key'    => [ 'type' => 'string' ],
+                    'label'  => [ 'type' => 'string' ],
+                    'type'   => [ 'type' => 'string' ],
+                    'default'=> [],
                 ],
-                'required' => ['key'],
+                'required' => ['key', 'label', 'type', 'default'],
             ],
         ],
-        'checks' => [
-            'type' => 'array',
-            'items' => [
-                'type' => 'string',
-                'description' => 'Reglas/chequeos que debe cumplir el código (sin eval/import dinámico, sin XHR/fetch en runtime, sin datos de ejemplo, etc.)',
-            ],
-        ],
+        'metadata' => [ 'type' => 'object' ],
     ],
-    'required' => ['ok', 'codigo', 'descripcion', 'dataset_contract', 'placeholders', 'checks'],
 ];
 
 // Attempt to load the OpenAI PHP SDK if it's bundled with the plugin. The
