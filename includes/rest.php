@@ -87,7 +87,7 @@ function tanviz_rest_generate( WP_REST_Request $req ) {
         'input' => $prompt,
         'text'  => [
             'format' => [
-                'name' => 'json_schema',
+                'type' => 'json_schema',
                 'json_schema' => [
                     'name'   => 'TanVizResponse',
                     'schema' => $schema,
