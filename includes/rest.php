@@ -55,12 +55,12 @@ add_action('rest_api_init', function(){
 });
 
 function tanviz_rest_generate( WP_REST_Request $req ) {
-    $api_key = trim( get_option( 'tanviz_openai_api_key', '' ) );
+    $api_key = trim( get_option( 'tanviz_api_key', '' ) );
     if ( ! $api_key ) {
         wp_send_json_error( [ 'message' => 'Missing API key' ], 400 );
     }
 
-    $model       = get_option( 'tanviz_openai_model', 'gpt-4o-2024-08-06' );
+    $model       = get_option( 'tanviz_model', 'gpt-4o-2024-08-06' );
     $prompt_raw  = sanitize_textarea_field( (string) $req->get_param( 'prompt' ) );
     $dataset_url = esc_url_raw( (string) $req->get_param( 'dataset_url' ) );
 
