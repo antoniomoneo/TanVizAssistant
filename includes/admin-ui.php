@@ -58,13 +58,6 @@ function tanviz_render_sandbox(){
           <h2><?php echo esc_html__('Dataset sample','TanViz'); ?></h2>
           <pre id="tanviz-sample"></pre>
           <p><button class="button button-primary" id="tanviz-generate"><?php echo esc_html__('Generate visualization','TanViz'); ?></button></p>
-          <h2><?php echo esc_html__('Title & Slug','TanViz'); ?></h2>
-          <input type="text" id="tanviz-title" class="regular-text" placeholder="Title">
-          <input type="text" id="tanviz-slug" class="regular-text code" placeholder="slug-for-visualization">
-          <p><button class="button" id="tanviz-save"><?php echo esc_html__('Save to Library','TanViz'); ?></button>
-             <button class="button" id="tanviz-export"><?php echo esc_html__('Export PNG','TanViz'); ?></button>
-             <button class="button" id="tanviz-export-gif"><?php echo esc_html__('Export GIF','TanViz'); ?></button>
-             <button class="button" id="tanviz-copy-iframe"><?php echo esc_html__('Copy iframe','TanViz'); ?></button></p>
         </section>
         <section>
           <h2><?php echo esc_html__('Code (p5.js)','TanViz'); ?></h2>
@@ -79,6 +72,15 @@ function tanviz_render_sandbox(){
           <pre id="tanviz-console"></pre><p><button class="button" id="tanviz-copy-console"><?php echo esc_html__('Copy','TanViz'); ?></button></p>
         </section>
       </div>
+      <section class="tanviz-meta-box">
+        <h2><?php echo esc_html__('Title & Slug','TanViz'); ?></h2>
+        <input type="text" id="tanviz-title" class="regular-text" placeholder="Title">
+        <input type="text" id="tanviz-slug" class="regular-text code" placeholder="slug-for-visualization">
+        <p><button class="button" id="tanviz-save"><?php echo esc_html__('Save to Library','TanViz'); ?></button>
+           <button class="button" id="tanviz-export"><?php echo esc_html__('Export PNG','TanViz'); ?></button>
+           <button class="button" id="tanviz-export-gif"><?php echo esc_html__('Export GIF','TanViz'); ?></button>
+           <button class="button" id="tanviz-copy-iframe"><?php echo esc_html__('Copy iframe','TanViz'); ?></button></p>
+      </section>
     </div>
     <?php
 }
