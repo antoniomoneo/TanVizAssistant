@@ -59,7 +59,8 @@ function tanviz_rest_generate( WP_REST_Request $req ) {
     $prompt      = sanitize_textarea_field( (string) $req->get_param( 'prompt' ) );
     $dataset_url = esc_url_raw( (string) $req->get_param( 'dataset_url' ) );
 
-    $schema = tanviz_p5_json_schema();
+    // Obtain the JSON Schema definition for the p5.js response
+    $schema = \TanViz\Schema::responseSchema();
     $body   = [
         'model' => $model,
         'input' => tanviz_build_user_content( $dataset_url, $prompt, 20 ),
