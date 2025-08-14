@@ -87,12 +87,10 @@ function tanviz_rest_generate( WP_REST_Request $req ) {
         'input' => $prompt,
         'text'  => [
             'format' => [
-                'type' => 'json_schema',
-                'name' => 'TanVizResponse',
-                'json_schema' => [
-                    'schema' => $schema,
-                    'strict' => true,
-                ],
+                'type'   => 'json_schema',
+                'name'   => 'TanVizResponse',
+                'schema' => $schema,
+                'strict' => true,
             ],
         ],
         // 'max_output_tokens' => 2048,
