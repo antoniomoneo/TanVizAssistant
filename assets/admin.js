@@ -68,11 +68,6 @@
     });
   });
 
-  $(document).on('click','#tanviz-preview',function(e){
-    e.preventDefault();
-    writeIframe(getCode(), $('#tanviz-title').val());
-  });
-
   $(document).on('click','#tanviz-export',function(e){
     e.preventDefault();
     const ifr = document.getElementById('tanviz-iframe');
