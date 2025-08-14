@@ -64,7 +64,8 @@ function tanviz_render_sandbox(){
           <h2><?php echo esc_html__('Code (p5.js)','TanViz'); ?></h2>
           <textarea id="tanviz-code" rows="18" class="large-text code"></textarea>
           <p><button class="button" id="tanviz-copy-code"><?php echo esc_html__('Copy code','TanViz'); ?></button>
-             <button class="button" id="tanviz-fix"><?php echo esc_html__('Fix','TanViz'); ?></button></p>
+             <button class="button" id="tanviz-fix"><?php echo esc_html__('Fix','TanViz'); ?></button>
+             <button class="button" id="tanviz-run"><?php echo esc_html__('Run','TanViz'); ?></button></p>
           <details id="tanviz-rr-wrap"><summary><?php echo esc_html__( 'Request/Response', 'TanViz' ); ?></summary><pre id="tanviz-rr"></pre><p><button class="button" id="tanviz-copy-rr"><?php echo esc_html__('Copy','TanViz'); ?></button></p></details>
         </section>
         <section>
