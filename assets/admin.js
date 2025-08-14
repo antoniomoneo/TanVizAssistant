@@ -147,6 +147,29 @@
     navigator.clipboard.writeText(getCode()).then(()=>alert('Copied'));
   });
 
+  $(document).on('click','#tanviz-fix',function(e){
+    e.preventDefault();
+    const code = getCode();
+    $('#tanviz-rr').text('Fixing...');
+    $('#tanviz-rr-wrap').prop('open', true);
+    $.ajax({
+      url: TanVizCfg.rest.fix,
+      method: 'POST',
+      headers: { 'X-WP-Nonce': TanVizCfg.nonce },
+      contentType: 'application/json',
+      data: JSON.stringify({ code })
+    }).done(function(resp){
+      const fixed = resp && resp.codigo;
+      if (fixed){
+        setCode(fixed);
+        const title = $('#tanviz-title').val();
+        writeIframe(fixed, title);
+      }
+    }).fail(function(xhr){
+      $('#tanviz-rr').text(xhr.responseText || 'Error');
+    });
+  });
+
   $(document).on('click','#tanviz-copy-rr',function(e){
     e.preventDefault();
     const txt = $('#tanviz-rr').text();
