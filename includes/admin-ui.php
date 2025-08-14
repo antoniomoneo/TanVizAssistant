@@ -57,8 +57,7 @@ function tanviz_render_sandbox(){
           </select>
           <h2><?php echo esc_html__('Dataset sample','TanViz'); ?></h2>
           <pre id="tanviz-sample"></pre>
-          <p><button class="button button-primary" id="tanviz-generate"><?php echo esc_html__('Generate visualization','TanViz'); ?></button>
-             <button class="button" id="tanviz-preview"><?php echo esc_html__('Run code','TanViz'); ?></button></p>
+          <p><button class="button button-primary" id="tanviz-generate"><?php echo esc_html__('Generate visualization','TanViz'); ?></button></p>
           <h2><?php echo esc_html__('Title & Slug','TanViz'); ?></h2>
           <input type="text" id="tanviz-title" class="regular-text" placeholder="Title">
           <input type="text" id="tanviz-slug" class="regular-text code" placeholder="slug-for-visualization">
