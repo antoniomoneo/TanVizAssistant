@@ -131,54 +131,76 @@ function tanviz_rest_generate( WP_REST_Request $req ) {
     $prompt_raw  = sanitize_textarea_field( (string) $req->get_param( 'prompt' ) );
     $dataset_url = esc_url_raw( (string) $req->get_param( 'dataset_url' ) );
 
-    $prompt = tanviz_build_user_content( $dataset_url, $prompt_raw, 20 );
-
     global $tanviz_schema;
     $schema = $tanviz_schema;
 
-    $payload = [
-        'model' => $model,
-        'input' => $prompt,
-        'text'  => [
-            'format' => [
-                'type'   => 'json_schema',
-                'name'   => 'TanVizResponse',
-                'schema' => $schema,
-                'strict' => true,
-            ],
-        ],
-        // 'max_output_tokens' => 2048,
+    if ( ! is_array( $schema ) || empty( $schema ) ) {
+        wp_send_json_error([
+            'message' => 'Schema inválido antes de enviar al API (no es array o está vacío).',
+        ], 500 );
+    }
+
+    $format = [
+        'type'   => 'json_schema',
+        'name'   => 'TanVizResponse',
+        'schema' => $schema,
+        'strict' => true,
     ];
 
+    $datasetUrl = $dataset_url ?: 'https://raw.githubusercontent.com/.../data.csv';
+    $userPrompt = $prompt_raw ?: 'Genera el código p5.js para visualizar el dataset';
+
+    $input = [
+        [
+            'role'    => 'system',
+            'content' => "Eres un generador de visualizaciones con p5.js. Entrega SIEMPRE un JSON válido que cumpla el schema.\n- Prohíbe eval/import dinámicos/fetch/XHR en runtime del sketch.\n- Usa placeholders {{DATASET_URL}}, {{col.year}}, {{col.value}}.\n- Asegura yearMin/yearMax cuando haya rangos.\n- No incluyas datos de ejemplo en el código.",
+        ],
+        [
+            'role'    => 'user',
+            'content' => "Dataset: {$datasetUrl}\n{$userPrompt}",
+        ],
+    ];
+
+    $payload = [
+        'model' => $model,
+        'input' => $input,
+        'text'  => [
+            'format' => $format,
+        ],
+    ];
+
+    if ( ! isset( $payload['text']['format']['schema'] ) || ! is_array( $payload['text']['format']['schema'] ) ) {
+        wp_send_json_error([
+            'message' => 'text.format.schema no es un array antes del envío.',
+            'debug'   => $payload['text']['format'],
+        ], 500 );
+    }
+
     try {
-        if ( class_exists( '\\OpenAI\\Client' ) ) {
-            $client   = new OpenAI\Client( $api_key );
-            $response = $client->responses->create( $payload );
-            $body     = [
-                'output' => $response->output,
-            ];
-        } else {
-            $request_args = [
-                'headers' => [
-                    'Authorization' => 'Bearer ' . $api_key,
-                    'Content-Type'  => 'application/json',
-                ],
-                'body'    => wp_json_encode( $payload ),
-                'timeout' => 60,
-            ];
+        $ch = curl_init( 'https://api.openai.com/v1/responses' );
+        curl_setopt_array( $ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_HTTPHEADER     => [
+                'Content-Type: application/json',
+                'Authorization: Bearer ' . $api_key,
+            ],
+            CURLOPT_POST           => true,
+            CURLOPT_POSTFIELDS     => json_encode( $payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ),
+        ] );
 
-            $response = wp_remote_post( 'https://api.openai.com/v1/responses', $request_args );
-            if ( is_wp_error( $response ) ) {
-                throw new \RuntimeException( $response->get_error_message() );
-            }
+        $raw  = curl_exec( $ch );
+        $http = curl_getinfo( $ch, CURLINFO_HTTP_CODE );
+        $err  = curl_error( $ch );
+        curl_close( $ch );
 
-            $code = wp_remote_retrieve_response_code( $response );
-            $body = json_decode( wp_remote_retrieve_body( $response ), true );
-            if ( $code >= 400 || isset( $body['error'] ) ) {
-                $msg = is_array( $body ) && isset( $body['error']['message'] ) ? $body['error']['message'] : 'OpenAI request failed';
-                throw new \RuntimeException( $msg );
-            }
+        if ( $err ) {
+            wp_send_json_error( [ 'message' => 'cURL error', 'raw' => $err ], 500 );
         }
+        if ( $http < 200 || $http >= 300 ) {
+            wp_send_json_error( [ 'message' => 'API error', 'raw' => $raw ], $http ?: 500 );
+        }
+
+        $body = json_decode( $raw, true );
 
         $out = $body['output'][0]['content'][0]['text'] ?? null;
         if ( ! $out ) {
