@@ -21,7 +21,7 @@ final class Schema
             'title' => 'TanVizResponse',
             'type' => 'object',
             'additionalProperties' => false,
-            'required' => ['ok', 'codigo', 'descripcion', 'dataset_contract', 'placeholders', 'checks'],
+            'required' => ['ok', 'codigo', 'descripcion', 'dataset_contract', 'placeholders', 'checks', 'text'],
             'properties' => [
                 'ok' => ['type' => 'boolean', 'const' => true],
                 'descripcion' => ['type' => 'string', 'minLength' => 40, 'maxLength' => 600],
@@ -78,6 +78,25 @@ final class Schema
                             'items' => ['type' => 'string'],
                             'minItems' => 3,
                         ],
+                    ],
+                ],
+                'text' => [
+                    'type' => 'object',
+                    'additionalProperties' => false,
+                    'required' => ['format', 'value'],
+                    'properties' => [
+                        'format' => [
+                            'type' => 'object',
+                            'additionalProperties' => false,
+                            'required' => ['type'],
+                            'properties' => [
+                                'type' => [
+                                    'type' => 'string',
+                                    'enum' => ['plain_text', 'markdown'],
+                                ],
+                            ],
+                        ],
+                        'value' => ['type' => 'string'],
                     ],
                 ],
                 'codigo' => [
