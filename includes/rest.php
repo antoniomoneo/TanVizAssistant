@@ -1,17 +1,9 @@
 <?php
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
+require_once TANVIZ_PATH . 'includes/schema.php';
 require_once TANVIZ_PATH . 'includes/structured.php';
 require_once TANVIZ_PATH . 'includes/datasets.php';
-
-// Attempt to load the OpenAI PHP SDK if it's bundled with the plugin. The
-// plugin will fall back to the WordPress HTTP API if the SDK isn't available.
-if ( ! class_exists( '\\OpenAI\\Client' ) ) {
-    $autoload = TANVIZ_PATH . 'vendor/autoload.php';
-    if ( is_readable( $autoload ) ) {
-        require_once $autoload;
-    }
-}
 
 add_action('rest_api_init', function(){
     register_rest_route('TanViz/v1','/generate',[
@@ -55,127 +47,74 @@ add_action('rest_api_init', function(){
             'dataset_url' => ['required'=>false],
         ],
     ]);
-
-    register_rest_route('TanViz/v1','/test',[
-        'methods'  => 'GET',
-        'permission_callback' => function(){ return current_user_can('manage_options'); },
-        'callback' => 'tanviz_rest_test',
-    ]);
 });
 
 function tanviz_rest_generate( WP_REST_Request $req ) {
     $api_key = trim( get_option( 'tanviz_api_key', '' ) );
     if ( ! $api_key ) {
-        wp_send_json_error( [ 'message' => 'Missing API key' ], 400 );
+        return new WP_REST_Response( [ 'error' => 'Missing API key' ], 400 );
     }
 
-    $model       = get_option( 'tanviz_model', 'gpt-4o-2024-08-06' );
-    $prompt_raw  = sanitize_textarea_field( (string) $req->get_param( 'prompt' ) );
+    $model       = get_option( 'tanviz_model', 'gpt-4o-mini' );
+    $prompt      = sanitize_textarea_field( (string) $req->get_param( 'prompt' ) );
     $dataset_url = esc_url_raw( (string) $req->get_param( 'dataset_url' ) );
 
-    $schema = tanviz_get_schema();
-
-    if ( ! is_array( $schema ) || empty( $schema ) ) {
-        wp_send_json_error([
-            'message' => 'Schema inválido antes de enviar al API (no es array o está vacío).',
-        ], 500 );
-    }
-
-    $format = [
-        'type' => 'json_schema',
-        'json_schema' => [
-            'name'   => 'TanVizResponse',
-            'schema' => $schema,
-            'strict' => true,
-        ],
-    ];
-
-    $datasetUrl = $dataset_url ?: 'https://raw.githubusercontent.com/.../data.csv';
-    $userPrompt = $prompt_raw ?: 'Genera el código p5.js para visualizar el dataset';
-
-    $input = [
-        [
-            'role'    => 'system',
-            'content' => "Eres un generador de visualizaciones con p5.js. Entrega SIEMPRE un JSON válido que cumpla el schema.\n- Prohíbe eval/import dinámicos/fetch/XHR en runtime del sketch.\n- Usa placeholders {{DATASET_URL}}, {{col.year}}, {{col.value}}.\n- Asegura yearMin/yearMax cuando haya rangos.\n- No incluyas datos de ejemplo en el código.",
-        ],
-        [
-            'role'    => 'user',
-            'content' => tanviz_build_user_content( $datasetUrl, $userPrompt ),
-        ],
-    ];
-
-    $payload = [
+    $schema = tanviz_p5_json_schema();
+    $body   = [
         'model' => $model,
-        'input' => $input,
+        'input' => tanviz_build_user_content( $dataset_url, $prompt, 20 ),
         'text'  => [
-            'format' => $format,
+            'format' => [
+                'type'   => 'json_schema',
+                'name'   => 'tanviz_p5_visualizacion',
+                'schema' => $schema,
+            ],
         ],
     ];
 
-    if ( ! isset( $payload['text']['format']['json_schema']['schema'] ) || ! is_array( $payload['text']['format']['json_schema']['schema'] ) ) {
-        wp_send_json_error([
-            'message' => 'text.format.json_schema.schema no es un array antes del envío.',
-            'debug'   => $payload['text']['format'],
-        ], 500 );
+    $args = [
+        'headers' => [
+            'Authorization' => 'Bearer ' . $api_key,
+            'Content-Type'  => 'application/json',
+        ],
+        'timeout' => 60,
+        'body'    => wp_json_encode( $body ),
+    ];
+
+    $resp = wp_remote_post( 'https://api.openai.com/v1/responses', $args );
+    if ( is_wp_error( $resp ) ) {
+        return new WP_REST_Response( [ 'error' => $resp->get_error_message() ], 500 );
     }
 
-    try {
-        $ch = curl_init( 'https://api.openai.com/v1/responses' );
-        curl_setopt_array( $ch, [
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_HTTPHEADER     => [
-                'Content-Type: application/json',
-                'Authorization: Bearer ' . $api_key,
-            ],
-            CURLOPT_POST           => true,
-            CURLOPT_POSTFIELDS     => json_encode( $payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ),
-        ] );
-
-        $raw  = curl_exec( $ch );
-        $http = curl_getinfo( $ch, CURLINFO_HTTP_CODE );
-        $err  = curl_error( $ch );
-        curl_close( $ch );
-
-        if ( $err ) {
-            wp_send_json_error( [ 'message' => 'cURL error', 'raw' => $err ], 500 );
-        }
-        if ( $http < 200 || $http >= 300 ) {
-            wp_send_json_error( [ 'message' => 'API error', 'raw' => $raw ], $http ?: 500 );
-        }
-
-        $body = json_decode( $raw, true );
-
-        $data = tanviz_extract_structured( $body );
-        if ( ! is_array( $data ) ) {
-            throw new \RuntimeException( 'No structured JSON from Responses API' );
-        }
-
-        $code_p5 = tanviz_normalize_p5_code( $data['codigo'] ?? '' );
-        if ( ! $code_p5 ) {
-            throw new \RuntimeException( 'No codigo in response' );
-        }
-
-        $result = [
-            'ok'     => true,
-            'codigo' => $code_p5,
-        ];
-        if ( isset( $data['titulo'] ) ) {
-            $result['titulo'] = $data['titulo'];
-        }
-        if ( isset( $data['descripcion'] ) ) {
-            $result['descripcion'] = $data['descripcion'];
-        }
-        if ( isset( $data['tags'] ) ) {
-            $result['tags'] = $data['tags'];
-        }
-
-        wp_send_json_success( $result );
-    } catch ( \Throwable $e ) {
-        wp_send_json_error([
-            'message' => $e->getMessage(),
-            'trace'   => defined( 'TANVIZ_DEBUG' ) && TANVIZ_DEBUG ? $e->getTraceAsString() : null,
-        ], 500 );
+    $code = wp_remote_retrieve_response_code( $resp );
+    $raw  = wp_remote_retrieve_body( $resp );
+    $json = json_decode( $raw, true );
+    if ( $code < 200 || $code >= 300 || ! is_array( $json ) ) {
+        return new WP_REST_Response( [ 'error' => 'API error', 'raw' => $raw ], 500 );
     }
+
+    $structured = tanviz_extract_structured( $json );
+    if ( ! $structured || empty( $structured['codigo'] ) ) {
+        return new WP_REST_Response( [ 'error' => 'No structured output', 'raw' => $json ], 502 );
+    }
+
+    $code_p5 = tanviz_normalize_p5_code( $structured['codigo'] );
+
+    $response = [
+        'ok'     => true,
+        'codigo' => $code_p5,
+    ];
+    if ( isset( $structured['titulo'] ) ) {
+        $response['titulo'] = $structured['titulo'];
+    }
+    if ( isset( $structured['descripcion'] ) ) {
+        $response['descripcion'] = $structured['descripcion'];
+    }
+    if ( isset( $structured['tags'] ) ) {
+        $response['tags'] = $structured['tags'];
+    }
+
+    return new WP_REST_Response( $response, 200 );
 }
 
 function tanviz_rest_save( WP_REST_Request $req ) {
@@ -212,13 +151,4 @@ function tanviz_rest_save( WP_REST_Request $req ) {
     }
 
     return new WP_REST_Response( [ 'ok' => true, 'id' => $post_id ], 200 );
-}
-
-function tanviz_rest_test() {
-    $schema = tanviz_get_schema();
-
-    wp_send_json_success([
-        'ok'     => true,
-        'schema' => $schema,
-    ]);
 }

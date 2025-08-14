@@ -1,31 +1,6 @@
 <?php
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
-function tanviz_get_schema() {
-    return [
-        'type' => 'object',
-        'additionalProperties' => false,
-        'required' => ['codigo', 'variables', 'metadata'],
-        'properties' => [
-            'codigo' => ['type' => 'string'],
-            'variables' => [
-                'type' => 'array',
-                'items' => [
-                    'type' => 'object',
-                    'properties' => [
-                        'key'    => ['type' => 'string'],
-                        'label'  => ['type' => 'string'],
-                        'type'   => ['type' => 'string'],
-                        'default'=> [],
-                    ],
-                    'required' => ['key','label','type','default'],
-                ],
-            ],
-            'metadata' => ['type' => 'object'],
-        ],
-    ];
-}
-
 function tanviz_extract_structured( array $api_json ) {
     if ( ! empty( $api_json['output'] ) && is_array( $api_json['output'] ) ) {
         foreach ( $api_json['output'] as $item ) {
@@ -90,7 +65,7 @@ function tanviz_build_user_content( $dataset_url, $user_prompt, $sample_rows = 2
     $lines[] = 'Output rules:';
     $lines[] = "- Return ONLY JSON according to schema. 'codigo' must be p5 (global or instance). No <script>.";
     $lines[] = '- Ensure animation or stochastic behavior (generative). Keep draw efficient.';
-    $lines[] = '- Overlay title and logo are handled externally; do not create related constants or logic.';
+    $lines[] = '- Include logic for overlay title and logo.';
     $lines[] = '';
     $lines[] = 'User description:';
     $lines[] = $user_prompt ?: '(empty)';
