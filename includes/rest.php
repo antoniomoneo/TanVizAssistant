@@ -88,8 +88,8 @@ function tanviz_rest_generate( WP_REST_Request $req ) {
         'text'  => [
             'format' => [
                 'type' => 'json_schema',
+                'name' => 'TanVizResponse',
                 'json_schema' => [
-                    'name'   => 'TanVizResponse',
                     'schema' => $schema,
                     'strict' => true,
                 ],
