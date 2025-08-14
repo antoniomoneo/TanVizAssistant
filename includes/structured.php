@@ -1,6 +1,31 @@
 <?php
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
+function tanviz_get_schema() {
+    return [
+        'type' => 'object',
+        'additionalProperties' => false,
+        'required' => ['codigo', 'variables', 'metadata'],
+        'properties' => [
+            'codigo' => ['type' => 'string'],
+            'variables' => [
+                'type' => 'array',
+                'items' => [
+                    'type' => 'object',
+                    'properties' => [
+                        'key'    => ['type' => 'string'],
+                        'label'  => ['type' => 'string'],
+                        'type'   => ['type' => 'string'],
+                        'default'=> [],
+                    ],
+                    'required' => ['key','label','type','default'],
+                ],
+            ],
+            'metadata' => ['type' => 'object'],
+        ],
+    ];
+}
+
 function tanviz_extract_structured( array $api_json ) {
     if ( ! empty( $api_json['output'] ) && is_array( $api_json['output'] ) ) {
         foreach ( $api_json['output'] as $item ) {
