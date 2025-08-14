@@ -4,30 +4,6 @@ if ( ! defined( 'ABSPATH' ) ) { exit; }
 require_once TANVIZ_PATH . 'includes/structured.php';
 require_once TANVIZ_PATH . 'includes/datasets.php';
 
-// JSON schema for TanViz responses (minimal version)
-$tanviz_schema = [
-    'type' => 'object',
-    'additionalProperties' => false,
-    'required' => ['codigo', 'variables', 'metadata'],
-    'properties' => [
-        'codigo' => [ 'type' => 'string' ],
-        'variables' => [
-            'type' => 'array',
-            'items' => [
-                'type' => 'object',
-                'properties' => [
-                    'key'    => [ 'type' => 'string' ],
-                    'label'  => [ 'type' => 'string' ],
-                    'type'   => [ 'type' => 'string' ],
-                    'default'=> [],
-                ],
-                'required' => ['key', 'label', 'type', 'default'],
-            ],
-        ],
-        'metadata' => [ 'type' => 'object' ],
-    ],
-];
-
 // Attempt to load the OpenAI PHP SDK if it's bundled with the plugin. The
 // plugin will fall back to the WordPress HTTP API if the SDK isn't available.
 if ( ! class_exists( '\\OpenAI\\Client' ) ) {
@@ -97,8 +73,7 @@ function tanviz_rest_generate( WP_REST_Request $req ) {
     $prompt_raw  = sanitize_textarea_field( (string) $req->get_param( 'prompt' ) );
     $dataset_url = esc_url_raw( (string) $req->get_param( 'dataset_url' ) );
 
-    global $tanviz_schema;
-    $schema = $tanviz_schema;
+    $schema = tanviz_get_schema();
 
     if ( ! is_array( $schema ) || empty( $schema ) ) {
         wp_send_json_error([
@@ -107,10 +82,12 @@ function tanviz_rest_generate( WP_REST_Request $req ) {
     }
 
     $format = [
-        'type'   => 'json_schema',
-        'name'   => 'TanVizResponse',
-        'schema' => $schema,
-        'strict' => true,
+        'type' => 'json_schema',
+        'json_schema' => [
+            'name'   => 'TanVizResponse',
+            'schema' => $schema,
+            'strict' => true,
+        ],
     ];
 
     $datasetUrl = $dataset_url ?: 'https://raw.githubusercontent.com/.../data.csv';
@@ -123,22 +100,20 @@ function tanviz_rest_generate( WP_REST_Request $req ) {
         ],
         [
             'role'    => 'user',
-            'content' => "Dataset: {$datasetUrl}\n{$userPrompt}",
+            'content' => tanviz_build_user_content( $datasetUrl, $userPrompt ),
         ],
     ];
 
     $payload = [
         'model' => $model,
         'input' => $input,
-        'text'  => [
-            'format' => $format,
-        ],
+        'response_format' => $format,
     ];
 
-    if ( ! isset( $payload['text']['format']['schema'] ) || ! is_array( $payload['text']['format']['schema'] ) ) {
+    if ( ! isset( $payload['response_format']['json_schema']['schema'] ) || ! is_array( $payload['response_format']['json_schema']['schema'] ) ) {
         wp_send_json_error([
-            'message' => 'text.format.schema no es un array antes del envío.',
-            'debug'   => $payload['text']['format'],
+            'message' => 'response_format.json_schema.schema no es un array antes del envío.',
+            'debug'   => $payload['response_format'],
         ], 500 );
     }
 
@@ -168,11 +143,10 @@ function tanviz_rest_generate( WP_REST_Request $req ) {
 
         $body = json_decode( $raw, true );
 
-        $out = $body['output'][0]['content'][0]['text'] ?? null;
-        if ( ! $out ) {
-            throw new \RuntimeException( 'No text output from Responses API' );
+        $data = tanviz_extract_structured( $body );
+        if ( ! is_array( $data ) ) {
+            throw new \RuntimeException( 'No structured JSON from Responses API' );
         }
-        $data = json_decode( $out, true, 512, JSON_THROW_ON_ERROR );
 
         $code_p5 = tanviz_normalize_p5_code( $data['codigo'] ?? '' );
         if ( ! $code_p5 ) {
@@ -239,8 +213,7 @@ function tanviz_rest_save( WP_REST_Request $req ) {
 }
 
 function tanviz_rest_test() {
-    global $tanviz_schema;
-    $schema = $tanviz_schema;
+    $schema = tanviz_get_schema();
 
     wp_send_json_success([
         'ok'     => true,
