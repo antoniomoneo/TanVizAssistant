@@ -91,14 +91,37 @@
 
   function renderThread(msgs){
     const $t = $('#tanviz-thread');
-    $t.text('');
-    (msgs||[]).forEach(m=>{
+    $t.empty();
+    (msgs||[]).forEach(m => {
       const role = m.role;
-      const text = m.text;
-      const div = $('<div class="tanviz-msg tanviz-'+role+'"></div>').text(role+': '+text);
-      $t.append(div);
+      const text = m.text || '';
+      const $msg = $('<div class="tanviz-msg tanviz-' + role + '"></div>');
+      const codeMatch = text.match(/```([\s\S]*?)```/);
+      if (codeMatch) {
+        const before = text.slice(0, codeMatch.index).trim();
+        const after = text.slice(codeMatch.index + codeMatch[0].length).trim();
+        if (before) { $msg.append($('<p></p>').text(before)); }
+        let code = codeMatch[1];
+        const firstLineBreak = code.indexOf('\n');
+        if (firstLineBreak !== -1) {
+          code = code.slice(firstLineBreak + 1); // drop language hint
+        }
+        const $pre = $('<pre class="tanviz-code"></pre>').text(code);
+        const $btn = $('<button class="button tanviz-copy">Copy</button>');
+        const $codeWrap = $('<div class="tanviz-code-block"></div>').append($btn).append($pre);
+        $msg.append($codeWrap);
+        if (after) { $msg.append($('<p></p>').text(after)); }
+      } else {
+        $msg.text(text);
+      }
+      $t.append($msg);
     });
   }
+
+  $(document).on('click', '.tanviz-copy', function(){
+    const code = $(this).siblings('pre').text();
+    navigator.clipboard.writeText(code);
+  });
 
   $(document).on('click','#tanviz-chat-send',function(e){
     e.preventDefault();
