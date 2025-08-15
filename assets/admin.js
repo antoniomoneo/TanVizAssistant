@@ -69,14 +69,20 @@
       data: JSON.stringify(body),
     }).done(function(resp){
       $('#tanviz-rr').text(JSON.stringify({request:body,response:resp},null,2));
-      const code = resp && (resp.codigo || (resp.structured && resp.structured.code));
-      if (code){
-        setCode(code);
-        const title = $('#tanviz-title').val() || resp.titulo || (resp.structured && resp.structured.meta && resp.structured.meta.title);
-        writeIframe(code, title);
+      if (resp && resp.success && resp.code){
+        setCode(resp.code);
+        const title = $('#tanviz-title').val();
+        writeIframe(resp.code, title);
+      } else {
+        $('#tanviz-console').text('Error inesperado. Reintenta.');
       }
     }).fail(function(xhr){
-      $('#tanviz-rr').text(xhr.responseText || 'Error');
+      let msg = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : (xhr.responseText || 'Error');
+      if (xhr.responseJSON && xhr.responseJSON.data && xhr.responseJSON.data.errors){
+        msg += '\n' + xhr.responseJSON.data.errors.join(', ');
+      }
+      $('#tanviz-console').text(msg + '\nReintenta.');
+      $('#tanviz-rr').text(msg);
     });
   });
 

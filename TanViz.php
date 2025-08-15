@@ -20,6 +20,8 @@ define( 'TANVIZ_URL',  plugin_dir_url( __FILE__ ) );
 add_action( 'plugins_loaded', function () {
     $files = [
         'includes/settings.php',
+        'includes/validators.php',
+        'includes/openai.php',
         'includes/structured.php',
         'includes/datasets.php',
         'includes/rest.php',
