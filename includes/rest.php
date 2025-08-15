@@ -53,7 +53,8 @@ add_action('rest_api_init', function(){
         'permission_callback' => function(){ return current_user_can('manage_options'); },
         'callback' => 'tanviz_rest_fix',
         'args'     => [
-            'code' => ['required'=>true],
+            'code'  => ['required'=>true],
+            'error' => ['required'=>true],
         ],
     ]);
 });
@@ -134,8 +135,50 @@ function tanviz_rest_fix( WP_REST_Request $req ) {
 
     $model = get_option( 'tanviz_model', 'gpt-4o-mini' );
     $code  = tanviz_normalize_p5_code( (string) $req->get_param( 'code' ) );
+    $error = sanitize_textarea_field( (string) $req->get_param( 'error' ) );
 
-    $input = "corrige los errores en este código p5.js:\n\n" . $code;
+    $input = <<<PROMPT
+Corrige el código de visualización p5.js basándote en el error capturado en la consola. Debes reemplazar únicamente las partes defectuosas y devolver el archivo completo ya corregido y listo para ejecutar.
+
+OBJETIVO
+- Entregar SOLO el código final de p5.js (archivo completo), funcional y sin errores, con las correcciones aplicadas.
+
+CONTEXTO
+ERROR EN CONSOLA:
+{$error}
+
+CÓDIGO ACTUAL:
+{$code}
+
+REGLAS DE CORRECCIÓN (OBLIGATORIAS)
+1) Sustitución mínima: modifica SOLO lo imprescindible para resolver el/los errores y mantener la intención original.
+2) Estructura p5.js obligatoria: incluir (según corresponda) preload(), setup(), draw() y cualquier función auxiliar usada.
+3) Mantener placeholders/datos:
+   - No inventar datos ni usar muestras ficticias.
+   - Respetar y reutilizar exactamente los placeholders/variables/URLs existentes (p.ej. {{DATASET_URL}}, {{col.year}}, {{col.value}}).
+4) Sin dependencias externas nuevas: no añadir librerías ni fetchs/cargas fuera de los mecanismos ya presentes/placeholders.
+5) Robustez:
+   - Manejo básico de errores (p.ej., verificar existencia de columnas/valores antes de acceder).
+   - Evitar patrones frágiles (eval, import dinámicos, XHR no previsto).
+6) Estilo de salida:
+   - SALIDA EXCLUSIVAMENTE EN FORMATO DE CÓDIGO.
+   - No incluir texto, explicaciones, comentarios, logs, prints ni anotaciones (ni dentro ni fuera del bloque).
+   - No incluir banners, encabezados, ni “```explicaciones```”. SOLO el código JS final.
+7) Compatibilidad:
+   - Mantener el API esperado por el entorno (nombres de funciones/variables públicas).
+   - No cambiar nombres de placeholders ni la interfaz esperada por el sistema.
+8) Performance: evitar bucles/operaciones innecesarias en draw().
+
+VALIDACIONES AUTOMÁTICAS (ANTES DE DEVOLVER EL CÓDIGO)
+- [ ] ¿Se resuelve el/los errores indicados en {$error}?
+- [ ] ¿El archivo es completo, ejecutable en p5.js y sin errores de sintaxis?
+- [ ] ¿Se han conservado placeholders/variables/URLs originales?
+- [ ] ¿No hay comentarios, impresiones de consola ni texto adicional?
+- [ ] ¿Se mantiene preload/setup/draw (si aplica) y la intención original?
+
+FORMATO DE RESPUESTA (ESTRICTO)
+Devuelve ÚNICAMENTE el código final del archivo p5.js, sin ningún texto antes o después.
+PROMPT;
 
     $body = [
         'model' => $model,
