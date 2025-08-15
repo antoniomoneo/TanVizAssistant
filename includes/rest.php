@@ -8,7 +8,7 @@ require_once TANVIZ_PATH . 'includes/datasets.php';
 require_once TANVIZ_PATH . 'includes/utils-logging.php';
 
 add_action('rest_api_init', function(){
-    register_rest_route('TanViz/v1','/generate',[
+    register_rest_route('TanVizAssistant/v1','/generate',[
         'methods'  => 'POST',
         'permission_callback' => function(){ return current_user_can('manage_options'); },
         'callback' => 'tanviz_rest_generate',
@@ -19,7 +19,7 @@ add_action('rest_api_init', function(){
         ],
     ]);
 
-    register_rest_route('TanViz/v1','/chat',[
+    register_rest_route('TanVizAssistant/v1','/chat',[
         'methods'  => 'POST',
         'permission_callback' => function(){ return current_user_can('manage_options'); },
         'callback' => 'tanviz_rest_chat',
@@ -29,7 +29,7 @@ add_action('rest_api_init', function(){
         ],
     ]);
 
-    register_rest_route('TanViz/v1','/datasets',[
+    register_rest_route('TanVizAssistant/v1','/datasets',[
         'methods'  => 'GET',
         'permission_callback' => function(){ return current_user_can('manage_options'); },
         'callback' => function(){
@@ -38,7 +38,7 @@ add_action('rest_api_init', function(){
         },
     ]);
 
-    register_rest_route('TanViz/v1','/sample',[
+    register_rest_route('TanVizAssistant/v1','/sample',[
         'methods'  => 'GET',
         'permission_callback' => function(){ return current_user_can('manage_options'); },
         'callback' => function( WP_REST_Request $req ){
@@ -49,7 +49,7 @@ add_action('rest_api_init', function(){
         'args' => [ 'url' => ['required'=>true] ],
     ]);
 
-    register_rest_route('TanViz/v1','/save',[
+    register_rest_route('TanVizAssistant/v1','/save',[
         'methods'  => 'POST',
         'permission_callback' => function(){ return current_user_can('manage_options'); },
         'callback' => 'tanviz_rest_save',
@@ -61,7 +61,7 @@ add_action('rest_api_init', function(){
         ],
     ]);
 
-    register_rest_route('TanViz/v1','/fix',[
+    register_rest_route('TanVizAssistant/v1','/fix',[
         'methods'  => 'POST',
         'permission_callback' => function(){ return current_user_can('manage_options'); },
         'callback' => 'tanviz_rest_fix',
@@ -71,7 +71,7 @@ add_action('rest_api_init', function(){
         ],
     ]);
 
-    register_rest_route('TanViz/v1','/ask',[
+    register_rest_route('TanVizAssistant/v1','/ask',[
         'methods'  => 'POST',
         'permission_callback' => function(){ return current_user_can('manage_options'); },
         'callback' => 'tanviz_rest_ask',
@@ -80,7 +80,7 @@ add_action('rest_api_init', function(){
         ],
     ]);
 
-    register_rest_route('tanviz/v1','/logs',[
+    register_rest_route('tanvizassistant/v1','/logs',[
         'methods'  => 'POST',
         'permission_callback' => '__return_true',
         'callback' => function( WP_REST_Request $req ){

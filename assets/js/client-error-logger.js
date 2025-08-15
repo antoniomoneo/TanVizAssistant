@@ -23,7 +23,7 @@
       };
       if (meta.datasetUrl) payload.dataset_url = meta.datasetUrl;
       if (meta.code) payload.code_hash = (await sha1Hex(meta.code)).slice(0,12);
-      fetch('/wp-json/tanviz/v1/logs', {
+      fetch('/wp-json/tanvizassistant/v1/logs', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),

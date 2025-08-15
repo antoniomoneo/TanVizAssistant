@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: TanViz
- * Description: Admin-only generator of generative p5.js visualizations using OpenAI Responses API (JSON Schema). Includes Settings, Sandbox, and Library.
+ * Description: Admin-only generator of generative p5.js visualizations using the OpenAI Assistants API with JSON Schema. Includes Settings, Sandbox, and Library.
  * Version: 0.1.0
  * Author: Antonio Moneo + ChatGPT
  * Text Domain: TanViz

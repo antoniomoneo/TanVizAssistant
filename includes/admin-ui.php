@@ -14,13 +14,13 @@ function tanviz_admin_assets( $hook ){
     wp_enqueue_script('tanviz-admin', TANVIZ_URL.'assets/admin.js', ['jquery'], TANVIZ_VERSION, true );
     wp_localize_script('tanviz-admin','TanVizCfg',[
         'rest' => [
-            'generate' => esc_url_raw( rest_url('TanViz/v1/generate') ),
-            'datasets' => esc_url_raw( rest_url('TanViz/v1/datasets') ),
-            'sample'   => esc_url_raw( rest_url('TanViz/v1/sample') ),
-            'save'     => esc_url_raw( rest_url('TanViz/v1/save') ),
-            'fix'      => esc_url_raw( rest_url('TanViz/v1/fix') ),
-            'ask'      => esc_url_raw( rest_url('TanViz/v1/ask') ),
-            'chat'     => esc_url_raw( rest_url('TanViz/v1/chat') ),
+            'generate' => esc_url_raw( rest_url('TanVizAssistant/v1/generate') ),
+            'datasets' => esc_url_raw( rest_url('TanVizAssistant/v1/datasets') ),
+            'sample'   => esc_url_raw( rest_url('TanVizAssistant/v1/sample') ),
+            'save'     => esc_url_raw( rest_url('TanVizAssistant/v1/save') ),
+            'fix'      => esc_url_raw( rest_url('TanVizAssistant/v1/fix') ),
+            'ask'      => esc_url_raw( rest_url('TanVizAssistant/v1/ask') ),
+            'chat'     => esc_url_raw( rest_url('TanVizAssistant/v1/chat') ),
         ],
         'nonce' => wp_create_nonce('wp_rest'),
         'logo'  => esc_url( get_option('tanviz_logo_url', TANVIZ_URL.'assets/logo.png') ),
