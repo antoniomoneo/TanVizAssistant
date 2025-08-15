@@ -97,8 +97,10 @@ function tanviz_openai_assistant_chat( array $args ): array {
         return array( 'ok' => false, 'error' => 'no_run_id', 'raw' => wp_remote_retrieve_body( $resp ) );
     }
 
-    $status = '';
-    for ( $i = 0; $i < 15; $i++ ) {
+    $status  = '';
+    $start   = time();
+    $timeout = 120; // seconds
+    do {
         $resp = wp_remote_get( "https://api.openai.com/v1/threads/{$thread_id}/runs/{$run_id}", array(
             'headers' => $headers,
             'timeout' => 60,
@@ -113,9 +115,12 @@ function tanviz_openai_assistant_chat( array $args ): array {
             break;
         }
         sleep( 2 );
-    }
+    } while ( time() - $start < $timeout && in_array( $status, array( 'queued', 'in_progress', 'requires_action' ), true ) );
     if ( 'completed' !== $status ) {
         tanviz_log_error( 'OpenAI run status: ' . $status );
+        if ( in_array( $status, array( 'queued', 'in_progress', 'requires_action' ), true ) ) {
+            $status = 'timeout';
+        }
         return array( 'ok' => false, 'error' => 'run_' . $status, 'raw' => '', 'thread_id' => $thread_id );
     }
 
