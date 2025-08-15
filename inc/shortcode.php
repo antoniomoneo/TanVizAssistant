@@ -9,15 +9,9 @@ add_shortcode('TanViz', function( $atts ){
     $code = $post->post_content;
     $code = wp_kses_post( $code );
     wp_enqueue_script('p5', 'https://cdn.jsdelivr.net/npm/p5@1.9.0/lib/p5.min.js', [], '1.9.0', true);
+    wp_add_inline_script('p5', "try{ new Function(" . wp_json_encode( $code ) . ")(); }catch(e){ console.error('TanViz error', e); }");
     ob_start(); ?>
     <div class="tanviz-embed" data-slug="<?php echo esc_attr($atts['slug']); ?>"></div>
-    <script>(function(){
-      function run(){
-        var code = <?php echo wp_json_encode($code); ?>;
-        try{ new Function(code)(); }catch(e){ console.error('TanViz error', e); }
-      }
-      if (window.p5) run();
-    })();</script>
     <?php
     return ob_get_clean();
 });
