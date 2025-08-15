@@ -25,6 +25,7 @@ function tanviz_openai_assistant_chat( array $args ): array {
     $headers = array(
         'Authorization' => 'Bearer ' . $api_key,
         'Content-Type'  => 'application/json',
+        'OpenAI-Beta'   => 'assistants=v2',
     );
 
     if ( ! $thread_id ) {
