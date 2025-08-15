@@ -53,8 +53,17 @@ add_action('rest_api_init', function(){
         'permission_callback' => function(){ return current_user_can('manage_options'); },
         'callback' => 'tanviz_rest_fix',
         'args'     => [
-            'code'  => ['required'=>true],
-            'error' => ['required'=>true],
+            'code'     => ['required'=>true],
+            'feedback' => ['required'=>true],
+        ],
+    ]);
+
+    register_rest_route('TanViz/v1','/ask',[
+        'methods'  => 'POST',
+        'permission_callback' => function(){ return current_user_can('manage_options'); },
+        'callback' => 'tanviz_rest_ask',
+        'args'     => [
+            'code' => ['required'=>true],
         ],
     ]);
 });
@@ -127,6 +136,61 @@ function tanviz_rest_generate( WP_REST_Request $req ) {
     return new WP_REST_Response( $response, 200 );
 }
 
+function tanviz_rest_ask( WP_REST_Request $req ) {
+    $api_key = trim( get_option( 'tanviz_api_key', '' ) );
+    if ( ! $api_key ) {
+        return new WP_REST_Response( [ 'error' => 'Missing API key' ], 400 );
+    }
+
+    $model = get_option( 'tanviz_model', 'gpt-4o-mini' );
+    $code  = tanviz_normalize_p5_code( (string) $req->get_param( 'code' ) );
+
+    $input = <<<PROMPT
+Evalúa el siguiente código p5.js y describe de forma concisa los problemas o mejoras necesarias.
+
+CÓDIGO:
+{$code}
+PROMPT;
+
+    $body = [
+        'model' => $model,
+        'input' => $input,
+    ];
+
+    $args = [
+        'headers' => [
+            'Authorization' => 'Bearer ' . $api_key,
+            'Content-Type'  => 'application/json',
+        ],
+        'timeout' => 60,
+        'body'    => wp_json_encode( $body ),
+    ];
+
+    $resp = wp_remote_post( 'https://api.openai.com/v1/responses', $args );
+    if ( is_wp_error( $resp ) ) {
+        return new WP_REST_Response( [ 'error' => $resp->get_error_message() ], 500 );
+    }
+
+    $code_status = wp_remote_retrieve_response_code( $resp );
+    $raw  = wp_remote_retrieve_body( $resp );
+    $json = json_decode( $raw, true );
+    if ( $code_status < 200 || $code_status >= 300 || ! is_array( $json ) ) {
+        return new WP_REST_Response( [ 'error' => 'API error', 'raw' => $raw ], 500 );
+    }
+
+    $out = '';
+    if ( ! empty( $json['output_text'] ) ) {
+        $out = $json['output_text'];
+    } elseif ( ! empty( $json['output'][0]['content'][0]['text'] ) ) {
+        $out = $json['output'][0]['content'][0]['text'];
+    }
+    if ( ! $out ) {
+        return new WP_REST_Response( [ 'error' => 'No output', 'raw' => $json ], 502 );
+    }
+
+    return new WP_REST_Response( [ 'ok' => true, 'feedback' => $out ], 200 );
+}
+
 function tanviz_rest_fix( WP_REST_Request $req ) {
     $api_key = trim( get_option( 'tanviz_api_key', '' ) );
     if ( ! $api_key ) {
@@ -135,17 +199,17 @@ function tanviz_rest_fix( WP_REST_Request $req ) {
 
     $model = get_option( 'tanviz_model', 'gpt-4o-mini' );
     $code  = tanviz_normalize_p5_code( (string) $req->get_param( 'code' ) );
-    $error = sanitize_textarea_field( (string) $req->get_param( 'error' ) );
+    $feedback = sanitize_textarea_field( (string) $req->get_param( 'feedback' ) );
 
     $input = <<<PROMPT
-Corrige el código de visualización p5.js basándote en el error capturado en la consola. Debes reemplazar únicamente las partes defectuosas y devolver el archivo completo ya corregido y listo para ejecutar.
+Corrige el código de visualización p5.js basándote en la retroalimentación proporcionada. Debes reemplazar únicamente las partes defectuosas y devolver el archivo completo ya corregido y listo para ejecutar.
 
 OBJETIVO
 - Entregar SOLO el código final de p5.js (archivo completo), funcional y sin errores, con las correcciones aplicadas.
 
 CONTEXTO
-ERROR EN CONSOLA:
-{$error}
+RETROALIMENTACIÓN:
+{$feedback}
 
 CÓDIGO ACTUAL:
 {$code}
@@ -170,7 +234,7 @@ REGLAS DE CORRECCIÓN (OBLIGATORIAS)
 8) Performance: evitar bucles/operaciones innecesarias en draw().
 
 VALIDACIONES AUTOMÁTICAS (ANTES DE DEVOLVER EL CÓDIGO)
-- [ ] ¿Se resuelve el/los errores indicados en {$error}?
+- [ ] ¿Se resuelven los puntos indicados en la retroalimentación?
 - [ ] ¿El archivo es completo, ejecutable en p5.js y sin errores de sintaxis?
 - [ ] ¿Se han conservado placeholders/variables/URLs originales?
 - [ ] ¿No hay comentarios, impresiones de consola ni texto adicional?
