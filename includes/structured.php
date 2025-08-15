@@ -63,8 +63,29 @@ function tanviz_build_user_content( $dataset_url, $user_prompt, $sample_rows = 2
     if ( ! file_exists( $file ) ) return "";
     $json = file_get_contents( $file );
     if ( $json === false ) return "";
-    $json = str_replace( ["{{PROMPT_USUARIO}}", "{{DATASET_URL}}"], [ $user_prompt, $dataset_url ], $json );
+    $json = str_replace( [ "{{PROMPT_USUARIO}}", "{{DATASET_URL}}" ], [ $user_prompt, $dataset_url ], $json );
     $data = json_decode( $json, true );
-    if ( json_last_error() !== JSON_ERROR_NONE ) return "";
-    return $data;
+    if ( json_last_error() !== JSON_ERROR_NONE || empty( $data['sections'] ) ) return "";
+
+    $sections = $data['sections'];
+    $parts    = [];
+
+    if ( ! empty( $sections['role'] ) ) {
+        $parts[] = trim( $sections['role'] );
+    }
+    if ( ! empty( $sections['objective'] ) && is_array( $sections['objective'] ) ) {
+        $parts[] = "OBJETIVO:\n- " . implode( "\n- ", array_map( 'trim', $sections['objective'] ) );
+    }
+    if ( ! empty( $sections['inputs'] ) && is_array( $sections['inputs'] ) ) {
+        $inputs = [];
+        foreach ( $sections['inputs'] as $k => $v ) {
+            $inputs[] = strtoupper( $k ) . ': ' . $v;
+        }
+        $parts[] = "ENTRADAS:\n" . implode( "\n", $inputs );
+    }
+    if ( ! empty( $sections['rules'] ) && is_array( $sections['rules'] ) ) {
+        $parts[] = "REGLAS:\n- " . implode( "\n- ", array_map( 'trim', $sections['rules'] ) );
+    }
+
+    return implode( "\n\n", $parts );
 }
