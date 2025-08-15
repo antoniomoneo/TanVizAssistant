@@ -157,6 +157,7 @@
   $(document).on('click','#tanviz-fix',function(e){
     e.preventDefault();
     const code = getCode();
+    const error = $('#tanviz-console').text();
     $('#tanviz-rr').text('Fixing...');
     $('#tanviz-rr-wrap').prop('open', true);
     $.ajax({
@@ -164,9 +165,9 @@
       method: 'POST',
       headers: { 'X-WP-Nonce': TanVizCfg.nonce },
       contentType: 'application/json',
-      data: JSON.stringify({ code })
+      data: JSON.stringify({ code, error })
     }).done(function(resp){
-      $('#tanviz-rr').text(JSON.stringify({request:{code},response:resp},null,2));
+      $('#tanviz-rr').text(JSON.stringify({request:{code,error},response:resp},null,2));
       const fixed = resp && resp.codigo;
       if (fixed){
         setCode(fixed);
