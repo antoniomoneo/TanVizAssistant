@@ -23,6 +23,7 @@ function tanviz_admin_assets( $hook ){
         'nonce' => wp_create_nonce('wp_rest'),
         'logo'  => esc_url( get_option('tanviz_logo_url', TANVIZ_URL.'assets/logo.png') ),
         'embed' => esc_url( home_url('tanviz/embed/') ),
+        'ci'    => esc_url( TANVIZ_URL . 'assets/table-ci.js' ),
     ]);
     // Code editor for the sandbox editor textarea
     $settings = wp_enqueue_code_editor( [ 'type'=>'text/javascript' ] );
