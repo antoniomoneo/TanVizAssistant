@@ -44,7 +44,8 @@
       "Compatibilidad: el código debe ser autónomo y ejecutable directamente en un entorno p5.js sin dependencias externas.",
       "Sin código muerto: no incluir funciones o variables no usadas.",
       "Limpieza: mantener indentación coherente, sin comentarios innecesarios.",
-      "Evitar patrones frágiles: no usar datos ficticios, eval(), import(), fetch() o XHR."
+      "Evitar patrones frágiles: no usar datos ficticios, eval(), import(), fetch() o XHR.",
+      "Aplica las lecciones aprendidas listadas en la sección LECCIONES."
     ]
   }
 }

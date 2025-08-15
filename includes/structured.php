@@ -87,5 +87,16 @@ function tanviz_build_user_content( $dataset_url, $user_prompt, $sample_rows = 2
         $parts[] = "REGLAS:\n- " . implode( "\n- ", array_map( 'trim', $sections['rules'] ) );
     }
 
+    $lessons_file = TANVIZ_PATH . "LESSONS.md";
+    if ( file_exists( $lessons_file ) ) {
+        $lessons = file_get_contents( $lessons_file );
+        if ( $lessons !== false ) {
+            $lessons = trim( preg_replace('/^#.*\n/', '', $lessons) );
+            if ( $lessons !== '' ) {
+                $parts[] = "LECCIONES:\n" . $lessons;
+            }
+        }
+    }
+
     return implode( "\n\n", $parts );
 }
