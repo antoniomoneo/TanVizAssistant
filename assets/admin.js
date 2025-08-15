@@ -1,5 +1,6 @@
 (function($){
   let editor;
+  let aiFeedback = '';
   function initEditor(){
     if (window.wp && window.wp.codeEditor && window.tanvizCodeEditorSettings){
       editor = wp.codeEditor.initialize( $('#tanviz-code'), window.tanvizCodeEditorSettings );
@@ -165,10 +166,30 @@
     writeIframe(code, title);
   });
 
+  $(document).on('click','#tanviz-ask',function(e){
+    e.preventDefault();
+    const code = getCode();
+    $('#tanviz-rr').text('Evaluating...');
+    $('#tanviz-rr-wrap').prop('open', true);
+    $.ajax({
+      url: TanVizCfg.rest.ask,
+      method: 'POST',
+      headers: { 'X-WP-Nonce': TanVizCfg.nonce },
+      contentType: 'application/json',
+      data: JSON.stringify({ code })
+    }).done(function(resp){
+      $('#tanviz-rr').text(JSON.stringify({request:{code},response:resp},null,2));
+      aiFeedback = resp && resp.feedback;
+      if (aiFeedback){ $('#tanviz-console').text(aiFeedback); }
+    }).fail(function(xhr){
+      $('#tanviz-rr').text(xhr.responseText || 'Error');
+    });
+  });
+
   $(document).on('click','#tanviz-fix',function(e){
     e.preventDefault();
     const code = getCode();
-    const error = $('#tanviz-console').text();
+    const feedback = aiFeedback;
     $('#tanviz-rr').text('Fixing...');
     $('#tanviz-rr-wrap').prop('open', true);
     $.ajax({
@@ -176,9 +197,9 @@
       method: 'POST',
       headers: { 'X-WP-Nonce': TanVizCfg.nonce },
       contentType: 'application/json',
-      data: JSON.stringify({ code, error })
+      data: JSON.stringify({ code, feedback })
     }).done(function(resp){
-      $('#tanviz-rr').text(JSON.stringify({request:{code,error},response:resp},null,2));
+      $('#tanviz-rr').text(JSON.stringify({request:{code,feedback},response:resp},null,2));
       const fixed = resp && resp.codigo;
       if (fixed){
         setCode(fixed);
