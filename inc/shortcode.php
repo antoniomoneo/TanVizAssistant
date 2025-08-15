@@ -9,7 +9,8 @@ add_shortcode('TanViz', function( $atts ){
     $code = $post->post_content;
     $code = wp_kses_post( $code );
     wp_enqueue_script('p5', 'https://cdn.jsdelivr.net/npm/p5@1.9.0/lib/p5.min.js', [], '1.9.0', true);
-    wp_add_inline_script('p5', "try{ new Function(" . wp_json_encode( $code ) . ")(); }catch(e){ console.error('TanViz error', e); }");
+    wp_enqueue_script('tanviz-ci', TANVIZ_URL.'assets/table-ci.js', ['p5'], TANVIZ_VERSION, true);
+    wp_add_inline_script('tanviz-ci', "try{ new Function(" . wp_json_encode( $code ) . ")(); }catch(e){ console.error('TanViz error', e); }");
     ob_start(); ?>
     <div class="tanviz-embed" data-slug="<?php echo esc_attr($atts['slug']); ?>"></div>
     <?php
@@ -31,8 +32,9 @@ function tanviz_handle_embed(){
     $code  = tanviz_normalize_p5_code( $post->post_content );
     $title = esc_html( get_the_title( $post ) );
     $logo  = esc_url( get_option('tanviz_logo_url', TANVIZ_URL.'assets/logo.png') );
+    $ci    = esc_url( TANVIZ_URL . 'assets/table-ci.js' );
     header('Content-Type: text/html; charset=utf-8');
-    echo "<!doctype html><html><head><meta charset='utf-8'><title>{$title}</title><style>html,body{margin:0;height:100%}#wrap{position:relative;height:100%}#ovl{position:absolute;top:8px;left:8px;display:flex;align-items:center;gap:.5rem;font:14px/1.2 system-ui}#ovl img{height:24px}</style><script src='https://cdn.jsdelivr.net/npm/p5@1.9.0/lib/p5.min.js'></script></head><body><div id='wrap'><div id='ovl'><img src='{$logo}'/><div>{$title}</div></div></div><script>{$code}</script></body></html>";
+    echo "<!doctype html><html><head><meta charset='utf-8'><title>{$title}</title><style>html,body{margin:0;height:100%}#wrap{position:relative;height:100%}#ovl{position:absolute;top:8px;left:8px;display:flex;align-items:center;gap:.5rem;font:14px/1.2 system-ui}#ovl img{height:24px}</style><script src='https://cdn.jsdelivr.net/npm/p5@1.9.0/lib/p5.min.js'></script><script src='{$ci}'></script></head><body><div id='wrap'><div id='ovl'><img src='{$logo}'/><div>{$title}</div></div></div><script>{$code}</script></body></html>";
     exit;
 }
 add_action('template_redirect','tanviz_handle_embed');

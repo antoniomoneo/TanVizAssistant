@@ -23,6 +23,7 @@
       #ovl{position:absolute;top:8px;left:8px;display:flex;align-items:center;gap:.5rem;font:14px/1.2 system-ui}
       #ovl img{height:24px}</style>
       <script src="https://cdn.jsdelivr.net/npm/p5@1.9.0/lib/p5.min.js" crossorigin="anonymous"></script>
+      <script src="${TanVizCfg.ci}"></script>
       <script>
         window.onerror = function(msg, src, line, col){
           parent.postMessage({type:'tanviz-error', message: msg+' ('+line+':'+col+')'}, '*');
