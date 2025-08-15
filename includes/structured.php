@@ -82,7 +82,19 @@ REGLAS DE GENERACIÓN (OBLIGATORIAS)
     • Prohibido redeclarar estas variables dentro de funciones (setup, draw, windowResized, etc.).
     2. Carga de datos
     • Usar exclusivamente funciones de p5.js en preload() (loadTable, loadJSON) para {$dataset_url}.
-    • Implementar una función auxiliar getColNameInsensitive(tbl, target) para obtener nombres de columnas ignorando mayúsculas/minúsculas y usarla siempre para acceder a columnas como Year, Category, Country, Value.
+    • Implementar y usar siempre esta función auxiliar para buscar columnas ignorando mayúsculas/minúsculas:
+
+    ```js
+    function getColNameInsensitive(tbl, target) {
+      if (!tbl || !tbl.columns) return -1;
+      for (let c = 0; c < tbl.columns.length; c++) {
+        if (String(tbl.columns[c]).toLowerCase() === String(target).toLowerCase()) {
+          return c;
+        }
+      }
+      return -1;
+    }
+    ```
     • No inventar datos de ejemplo; usar SOLO el dataset indicado.
     • Respetar y reutilizar exactamente los placeholders/variables/URLs existentes (p.ej., {{DATASET_URL}}, {{col.year}}, {{col.value}}).
     3. Diseño y lógica
