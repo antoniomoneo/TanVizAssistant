@@ -5,7 +5,7 @@ function tanviz_p5_json_schema() {
     return [
         'type'       => 'object',
         'properties' => [
-            'codigo' => [
+            'code' => [
                 'type'        => 'string',
                 'description' => 'Código p5.js que genera la visualización.',
             ],
@@ -14,7 +14,7 @@ function tanviz_p5_json_schema() {
                 'description' => 'Descripción breve de la visualización.',
             ],
         ],
-        'required' => [ 'codigo', 'descripcion' ],
+        'required' => [ 'code', 'descripcion' ],
         'additionalProperties' => false,
     ];
 }

@@ -202,8 +202,8 @@ function tanviz_rest_generate( WP_REST_Request $req ) {
         return new WP_Error( 'tanviz_openai_error', $resp['error'], array( 'raw' => $resp['raw'] ) );
     }
 
-    $codigo = $resp['codigo'];
-    $val    = tanviz_validate_p5_code( $codigo );
+    $code = $resp['code'];
+    $val  = tanviz_validate_p5_code( $code );
     if ( ! $val['ok'] ) {
         $err_txt = implode( ', ', $val['errors'] );
         tanviz_log_error([
@@ -219,7 +219,7 @@ function tanviz_rest_generate( WP_REST_Request $req ) {
             "Manejo de Errores: captura fallos al cargar CSV (URL incorrecta/archivo no disponible).",
             "Optimización: usa noLoop() para visualización estática.",
         ]);
-        $prompt_fix = "Corrige el código p5.js basándote en los errores detectados. Debes reemplazar ÚNICAMENTE lo imprescindible y devolver el archivo COMPLETO listo para ejecutar.\n\nOBJETIVO\n- Entregar SOLO el código final p5.js entre marcadores.\n\nCONTEXTO\nERROR EN VALIDACIÓN:\n{$err_txt}\n\nCÓDIGO ACTUAL:\n{$codigo}\n\nREGLAS DE CORRECCIÓN (OBLIGATORIAS)\n1) Sustitución mínima: conserva intención original.\n2) Estructura p5.js: preload(), setup(), draw() y helpers usados.\n3) Mantén dataset/URLs/placeholders existentes.\n4) Prohibido eval/import/fetch/XHR y datos de ejemplo.\n\nResponde entre:\n-----BEGIN_P5JS-----\n...CÓDIGO CORREGIDO...\n-----END_P5JS-----";
+        $prompt_fix = "Corrige el código p5.js basándote en los errores detectados. Debes reemplazar ÚNICAMENTE lo imprescindible y devolver el archivo COMPLETO listo para ejecutar.\n\nOBJETIVO\n- Entregar SOLO el código final p5.js entre marcadores.\n\nCONTEXTO\nERROR EN VALIDACIÓN:\n{$err_txt}\n\nCÓDIGO ACTUAL:\n{$code}\n\nREGLAS DE CORRECCIÓN (OBLIGATORIAS)\n1) Sustitución mínima: conserva intención original.\n2) Estructura p5.js: preload(), setup(), draw() y helpers usados.\n3) Mantén dataset/URLs/placeholders existentes.\n4) Prohibido eval/import/fetch/XHR y datos de ejemplo.\n\nResponde entre:\n-----BEGIN_P5JS-----\n...CÓDIGO CORREGIDO...\n-----END_P5JS-----";
 
         $retry = tanviz_openai_assistant_chat( [
             'dataset_url'    => $dataset_url,
@@ -249,8 +249,8 @@ function tanviz_rest_generate( WP_REST_Request $req ) {
             }
             return new WP_Error( 'tanviz_openai_error', $retry['error'], array( 'raw' => $retry['raw'] ) );
         }
-        $codigo   = $retry['codigo'];
-        $val      = tanviz_validate_p5_code( $codigo );
+        $code   = $retry['code'];
+        $val    = tanviz_validate_p5_code( $code );
         $thread_id = $retry['thread_id'] ?? $thread_id;
         $messages  = $retry['messages'] ?? $messages;
         if ( ! $val['ok'] ) {
@@ -275,10 +275,10 @@ function tanviz_rest_generate( WP_REST_Request $req ) {
         'model'        => $model,
         'dataset_url'  => $dataset_url,
         'prompt_hash'  => $prompt_hash,
-        'response_size'=> strlen( $codigo ),
+        'response_size'=> strlen( $code ),
     ]);
 
-    return new WP_REST_Response( array( 'success' => true, 'code' => $codigo, 'thread_id' => $thread_id, 'messages' => $messages ), 200 );
+    return new WP_REST_Response( array( 'success' => true, 'code' => $code, 'thread_id' => $thread_id, 'messages' => $messages ), 200 );
 }
 
 function tanviz_rest_chat( WP_REST_Request $req ) {
@@ -308,7 +308,7 @@ function tanviz_rest_chat( WP_REST_Request $req ) {
         return new WP_Error( 'tanviz_openai_error', $resp['error'], array( 'raw' => $resp['raw'] ) );
     }
 
-    return new WP_REST_Response( array( 'success'=>true, 'code'=>$resp['codigo'] ?? '', 'thread_id'=>$resp['thread_id'], 'messages'=>$resp['messages'] ), 200 );
+    return new WP_REST_Response( array( 'success'=>true, 'code'=>$resp['code'] ?? '', 'thread_id'=>$resp['thread_id'], 'messages'=>$resp['messages'] ), 200 );
 }
 
 function tanviz_rest_ask( WP_REST_Request $req ) {
@@ -517,7 +517,7 @@ PROMPT;
 
     $code_fixed = tanviz_normalize_p5_code( $out );
 
-    return new WP_REST_Response( [ 'ok' => true, 'codigo' => $code_fixed ], 200 );
+    return new WP_REST_Response( [ 'ok' => true, 'code' => $code_fixed ], 200 );
 }
 
 function tanviz_rest_save( WP_REST_Request $req ) {
