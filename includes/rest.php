@@ -19,6 +19,16 @@ add_action('rest_api_init', function(){
         ],
     ]);
 
+    register_rest_route('TanViz/v1','/chat',[
+        'methods'  => 'POST',
+        'permission_callback' => function(){ return current_user_can('manage_options'); },
+        'callback' => 'tanviz_rest_chat',
+        'args'     => [
+            'thread_id' => ['required'=>true],
+            'message'   => ['required'=>true],
+        ],
+    ]);
+
     register_rest_route('TanViz/v1','/datasets',[
         'methods'  => 'GET',
         'permission_callback' => function(){ return current_user_can('manage_options'); },
@@ -149,7 +159,7 @@ function tanviz_rest_generate( WP_REST_Request $req ) {
     ];
 
     try {
-        $resp = tanviz_openai_generate_code_only( $args );
+        $resp = tanviz_openai_assistant_chat( $args );
     } catch ( Throwable $e ) {
         tanviz_log_error([
             'action'      => 'generate',
@@ -165,6 +175,9 @@ function tanviz_rest_generate( WP_REST_Request $req ) {
         ]);
         return new WP_Error( 'tanviz_openai_exception', $e->getMessage() );
     }
+
+    $thread_id = $resp['thread_id'] ?? '';
+    $messages  = $resp['messages'] ?? array();
 
     if ( ! $resp['ok'] ) {
         $status = 0;
@@ -208,10 +221,11 @@ function tanviz_rest_generate( WP_REST_Request $req ) {
         ]);
         $prompt_fix = "Corrige el código p5.js basándote en los errores detectados. Debes reemplazar ÚNICAMENTE lo imprescindible y devolver el archivo COMPLETO listo para ejecutar.\n\nOBJETIVO\n- Entregar SOLO el código final p5.js entre marcadores.\n\nCONTEXTO\nERROR EN VALIDACIÓN:\n{$err_txt}\n\nCÓDIGO ACTUAL:\n{$codigo}\n\nREGLAS DE CORRECCIÓN (OBLIGATORIAS)\n1) Sustitución mínima: conserva intención original.\n2) Estructura p5.js: preload(), setup(), draw() y helpers usados.\n3) Mantén dataset/URLs/placeholders existentes.\n4) Prohibido eval/import/fetch/XHR y datos de ejemplo.\n\nResponde entre:\n-----BEGIN_P5JS-----\n...CÓDIGO CORREGIDO...\n-----END_P5JS-----";
 
-        $retry = tanviz_openai_generate_code_only( [
+        $retry = tanviz_openai_assistant_chat( [
             'dataset_url'    => $dataset_url,
             'prompt_usuario' => $prompt_fix,
             'model'          => $model,
+            'thread_id'      => $thread_id,
         ] );
         if ( ! $retry['ok'] ) {
             $status = 0;
@@ -235,8 +249,10 @@ function tanviz_rest_generate( WP_REST_Request $req ) {
             }
             return new WP_Error( 'tanviz_openai_error', $retry['error'], array( 'raw' => $retry['raw'] ) );
         }
-        $codigo = $retry['codigo'];
-        $val    = tanviz_validate_p5_code( $codigo );
+        $codigo   = $retry['codigo'];
+        $val      = tanviz_validate_p5_code( $codigo );
+        $thread_id = $retry['thread_id'] ?? $thread_id;
+        $messages  = $retry['messages'] ?? $messages;
         if ( ! $val['ok'] ) {
             tanviz_log_error([
                 'action'      => 'generate',
@@ -262,7 +278,37 @@ function tanviz_rest_generate( WP_REST_Request $req ) {
         'response_size'=> strlen( $codigo ),
     ]);
 
-    return new WP_REST_Response( array( 'success' => true, 'code' => $codigo ), 200 );
+    return new WP_REST_Response( array( 'success' => true, 'code' => $codigo, 'thread_id' => $thread_id, 'messages' => $messages ), 200 );
+}
+
+function tanviz_rest_chat( WP_REST_Request $req ) {
+    $api_key = trim( get_option( 'tanviz_openai_api_key', '' ) );
+    if ( ! $api_key ) {
+        tanviz_log_error( [ 'action'=>'chat', 'message'=>'Missing API key' ] );
+        return new WP_REST_Response( array( 'error' => 'Missing API key' ), 400 );
+    }
+
+    $thread_id = sanitize_text_field( (string) $req->get_param( 'thread_id' ) );
+    $message   = sanitize_textarea_field( (string) $req->get_param( 'message' ) );
+    $model     = get_option( 'tanviz_model', 'gpt-4o-2024-08-06' );
+
+    try {
+        $resp = tanviz_openai_assistant_chat( [
+            'thread_id'      => $thread_id,
+            'prompt_usuario' => $message,
+            'model'          => $model,
+        ] );
+    } catch ( Throwable $e ) {
+        tanviz_log_error([ 'action'=>'chat', 'message'=>$e->getMessage() ]);
+        return new WP_Error( 'tanviz_openai_exception', $e->getMessage() );
+    }
+
+    if ( ! $resp['ok'] ) {
+        tanviz_log_error([ 'action'=>'chat', 'message'=>$resp['error'], 'openai_error'=>$resp['raw'] ?? '' ]);
+        return new WP_Error( 'tanviz_openai_error', $resp['error'], array( 'raw' => $resp['raw'] ) );
+    }
+
+    return new WP_REST_Response( array( 'success'=>true, 'code'=>$resp['codigo'] ?? '', 'thread_id'=>$resp['thread_id'], 'messages'=>$resp['messages'] ), 200 );
 }
 
 function tanviz_rest_ask( WP_REST_Request $req ) {
