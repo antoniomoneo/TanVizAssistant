@@ -4,6 +4,7 @@ if ( ! defined( 'ABSPATH' ) ) { exit; }
 function tanviz_register_settings() {
     register_setting( 'tanviz_settings', 'tanviz_openai_api_key', [ 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field' ] );
     register_setting( 'tanviz_settings', 'tanviz_model', [ 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field', 'default' => 'gpt-4o-2024-08-06' ] );
+    register_setting( 'tanviz_settings', 'tanviz_assistant_id', [ 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field' ] );
     register_setting( 'tanviz_settings', 'tanviz_datasets_base', [ 'type'=>'string', 'sanitize_callback'=>'esc_url_raw' ] );
     register_setting( 'tanviz_settings', 'tanviz_logo_url', [ 'type'=>'string', 'sanitize_callback'=>'esc_url_raw', 'default'=> plugins_url('assets/logo.png', dirname(__FILE__,1) . '/../TanViz.php') ] );
 
@@ -17,6 +18,11 @@ function tanviz_register_settings() {
     add_settings_field( 'tanviz_model', __( 'OpenAI Model', 'TanViz' ), function(){
         $v = esc_attr( get_option( 'tanviz_model', 'gpt-4o-2024-08-06' ) );
         echo '<input type="text" name="tanviz_model" value="' . $v . '" class="regular-text" />';
+    }, 'tanviz', 'tanviz_main' );
+
+    add_settings_field( 'tanviz_assistant_id', __( 'OpenAI Assistant ID', 'TanViz' ), function(){
+        $v = esc_attr( get_option( 'tanviz_assistant_id', '' ) );
+        echo '<input type="text" name="tanviz_assistant_id" value="' . $v . '" class="regular-text code" />';
     }, 'tanviz', 'tanviz_main' );
 
 

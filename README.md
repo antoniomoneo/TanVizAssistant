@@ -1,6 +1,6 @@
 # TanViz (WordPress plugin)
 
-Admin‑only generator of **generative p5.js** visualizations using OpenAI **Responses API** with **JSON Schema**.
+Admin‑only generator of **generative p5.js** visualizations using OpenAI **Assistants API** with **JSON Schema**.
 
 ## Installation
 1. Copy the `TanViz/` folder into `wp-content/plugins/`.
@@ -8,7 +8,7 @@ Admin‑only generator of **generative p5.js** visualizations using OpenAI **Res
 3. Go to **TanViz → Settings** and set:
    - OpenAI API Key.
    - OpenAI Model (default: `gpt-4o-2024-08-06`).
-   - OpenAI Assistant ID (optional).
+   - OpenAI Assistant ID.
    - GitHub Datasets Base (raw URL prefix, e.g. `https://raw.githubusercontent.com/user/repo/branch/path/`).
    - Overlay Logo URL (optional).
 
@@ -17,8 +17,8 @@ Admin‑only generator of **generative p5.js** visualizations using OpenAI **Res
 2. In **TanViz → Sandbox**:
    - Write a prompt describing the visualization.
    - Pick the dataset; a 20‑row sample is shown.
-   - Click **Generate visualization** to call OpenAI.
-   - Inspect/edit the p5.js sketch and **Update preview**.
+   - Click **Generate visualization** to start a chat with OpenAI.
+   - Review the AI code box and copy it into the editor to preview.
    - Provide a Title and Slug then **Save to Library**.
    - Use **Export PNG** or **Export GIF** (experimental, same‑origin canvases only).
    - **Copy iframe** to reuse elsewhere.

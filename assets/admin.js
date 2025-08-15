@@ -1,6 +1,7 @@
 (function($){
   let editor;
   let aiFeedback = '';
+  let threadId = '';
   function initEditor(){
     if (window.wp && window.wp.codeEditor && window.tanvizCodeEditorSettings){
       editor = wp.codeEditor.initialize( $('#tanviz-code'), window.tanvizCodeEditorSettings );
@@ -71,10 +72,10 @@
     }).done(function(resp){
       $('#tanviz-rr').text(JSON.stringify({request:body,response:resp},null,2));
       const r = unwrapResponse(resp);
+      threadId = r.thread_id || '';
+      renderThread(r.messages);
       if (r && (r.success || r.ok) && r.code){
-        setCode(r.code);
-        const title = $('#tanviz-title').val();
-        writeIframe(r.code, title);
+        $('#tanviz-ai-code').val(r.code);
       } else {
         $('#tanviz-console').text('Error inesperado. Reintenta.');
       }
@@ -86,6 +87,49 @@
       $('#tanviz-console').text(msg + '\nReintenta.');
       $('#tanviz-rr').text(msg);
     });
+  });
+
+  function renderThread(msgs){
+    const $t = $('#tanviz-thread');
+    $t.text('');
+    (msgs||[]).forEach(m=>{
+      const role = m.role;
+      const text = m.text;
+      const div = $('<div class="tanviz-msg tanviz-'+role+'"></div>').text(role+': '+text);
+      $t.append(div);
+    });
+  }
+
+  $(document).on('click','#tanviz-chat-send',function(e){
+    e.preventDefault();
+    const message = $('#tanviz-chat-input').val();
+    if(!threadId){ alert('Start a conversation first'); return; }
+    $('#tanviz-chat-input').val('');
+    $('#tanviz-rr').text('Sending...');
+    $('#tanviz-rr-wrap').prop('open', true);
+    $.ajax({
+      url: TanVizCfg.rest.chat,
+      method: 'POST',
+      headers: { 'X-WP-Nonce': TanVizCfg.nonce },
+      contentType: 'application/json',
+      data: JSON.stringify({ thread_id: threadId, message })
+    }).done(function(resp){
+      $('#tanviz-rr').text(JSON.stringify({request:{thread_id:threadId,message},response:resp},null,2));
+      const r = unwrapResponse(resp);
+      renderThread(r.messages);
+      if(r.code){ $('#tanviz-ai-code').val(r.code); }
+    }).fail(function(xhr){
+      $('#tanviz-rr').text(xhr.responseText || 'Error');
+    });
+  });
+
+  $(document).on('click','#tanviz-copy-ai-code',function(e){
+    e.preventDefault();
+    const code = $('#tanviz-ai-code').val();
+    if(!code){ return; }
+    setCode(code);
+    const title = $('#tanviz-title').val();
+    writeIframe(code, title);
   });
 
   $(document).on('click','#tanviz-export',function(e){
