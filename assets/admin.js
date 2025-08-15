@@ -13,6 +13,11 @@
     const doc = $if[0].contentWindow.document;
     const logo = TanVizCfg.logo || '';
     $('#tanviz-console').text('');
+    if(!code || !code.trim()){
+      $('#tanviz-console').text('No code provided');
+    } else {
+      $('#tanviz-console').text('Running visualization...');
+    }
     const html = `<!doctype html><html><head><meta charset="utf-8">
       <style>html,body{margin:0;height:100%;}#wrap{position:relative;height:100%;}
       #ovl{position:absolute;top:8px;left:8px;display:flex;align-items:center;gap:.5rem;font:14px/1.2 system-ui}
@@ -26,6 +31,10 @@
           parent.postMessage({type:'tanviz-error', message: Array.from(arguments).join(' ')}, '*');
           return orig.apply(console, arguments);
         };})(console.error);
+        console.log = (function(orig){return function(){
+          parent.postMessage({type:'tanviz-log', message: Array.from(arguments).join(' ')}, '*');
+          return orig.apply(console, arguments);
+        };})(console.log);
       </script></head>
       <body><div id="wrap"><div id="ovl"><img src="${logo}"/><div>${(title||'')}</div></div></div>
       <script>
@@ -35,10 +44,11 @@
   }
 
   window.addEventListener('message', function(e){
-    if(e.data && e.data.type === 'tanviz-error'){
+    if(e.data && (e.data.type === 'tanviz-error' || e.data.type === 'tanviz-log')){
       const $c = $('#tanviz-console');
       const txt = $c.text();
-      $c.text(txt + (txt ? '\n' : '') + e.data.message);
+      const prefix = e.data.type === 'tanviz-error' ? 'ERROR: ' : '';
+      $c.text(txt + (txt ? '\n' : '') + prefix + e.data.message);
     }
   });
 

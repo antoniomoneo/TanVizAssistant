@@ -71,7 +71,7 @@ function tanviz_render_sandbox(){
         <section>
           <h2><?php echo esc_html__('Preview','TanViz'); ?></h2>
           <iframe id="tanviz-iframe" sandbox="allow-scripts allow-same-origin"></iframe>
-          <h2><?php echo esc_html__('Console','TanViz'); ?></h2>
+          <h2><?php echo esc_html__('Visualization Console','TanViz'); ?></h2>
           <pre id="tanviz-console"></pre><p><button class="button" id="tanviz-copy-console"><?php echo esc_html__('Copy','TanViz'); ?></button></p>
         </section>
       </div>
