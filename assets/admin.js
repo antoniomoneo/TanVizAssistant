@@ -8,6 +8,7 @@
   }
   function getCode(){ return editor ? editor.codemirror.getValue() : $('#tanviz-code').val(); }
   function setCode(v){ if(editor){editor.codemirror.setValue(v);} else {$('#tanviz-code').val(v);} }
+  function unwrapResponse(resp){ return resp && resp.response ? resp.response : resp; }
 
   function writeIframe(code, title){
     const $if = $('#tanviz-iframe');
@@ -69,10 +70,11 @@
       data: JSON.stringify(body),
     }).done(function(resp){
       $('#tanviz-rr').text(JSON.stringify({request:body,response:resp},null,2));
-      if (resp && resp.success && resp.code){
-        setCode(resp.code);
+      const r = unwrapResponse(resp);
+      if (r && (r.success || r.ok) && r.code){
+        setCode(r.code);
         const title = $('#tanviz-title').val();
-        writeIframe(resp.code, title);
+        writeIframe(r.code, title);
       } else {
         $('#tanviz-console').text('Error inesperado. Reintenta.');
       }
@@ -185,7 +187,8 @@
       data: JSON.stringify({ code })
     }).done(function(resp){
       $('#tanviz-rr').text(JSON.stringify({request:{code},response:resp},null,2));
-      aiFeedback = resp && resp.feedback;
+      const r = unwrapResponse(resp);
+      aiFeedback = r && r.feedback;
       if (aiFeedback){ $('#tanviz-console').text(aiFeedback); }
     }).fail(function(xhr){
       $('#tanviz-rr').text(xhr.responseText || 'Error');
@@ -206,7 +209,8 @@
       data: JSON.stringify({ code, feedback })
     }).done(function(resp){
       $('#tanviz-rr').text(JSON.stringify({request:{code,feedback},response:resp},null,2));
-      const fixed = resp && resp.codigo;
+      const r = unwrapResponse(resp);
+      const fixed = r && (r.codigo || r.code);
       if (fixed){
         setCode(fixed);
         const title = $('#tanviz-title').val();
