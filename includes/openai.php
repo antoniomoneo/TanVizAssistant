@@ -142,20 +142,20 @@ function tanviz_openai_assistant_chat( array $args ): array {
         }
     }
 
-    $codigo = '';
+    $code = '';
     for ( $i = count( $msgs ) - 1; $i >= 0; $i-- ) {
         if ( $msgs[ $i ]['role'] === 'assistant' ) {
             $block = tanviz_extract_p5_block( $msgs[ $i ]['text'] );
             if ( $block['ok'] ) {
-                $codigo = $block['codigo'];
+                $code = $block['code'];
                 break;
             }
         }
     }
-    if ( ! $codigo ) {
+    if ( ! $code ) {
         tanviz_log_error( 'Missing p5.js code block in OpenAI response.' );
         return array( 'ok' => false, 'error' => 'no_block', 'raw' => wp_remote_retrieve_body( $resp ), 'thread_id' => $thread_id, 'messages' => $msgs );
     }
 
-    return array( 'ok' => true, 'codigo' => $codigo, 'thread_id' => $thread_id, 'messages' => $msgs );
+    return array( 'ok' => true, 'code' => $code, 'thread_id' => $thread_id, 'messages' => $msgs );
 }
