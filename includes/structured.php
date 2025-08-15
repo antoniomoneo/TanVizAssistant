@@ -63,7 +63,7 @@ function tanviz_build_user_content( $dataset_url, $user_prompt, $sample_rows = 2
 Eres un experto desarrollador de código p5.js. Genera una visualización en p5.js a partir del dataset indicado y del objetivo creativo descrito por el usuario.
 
 OBJETIVO
-- Entregar SOLO el código final de p5.js en el espacio para la edición de código que sea funcional, óptimo, sin errores y listo para ejecutarse.
+    • Entregar SOLO el código final de p5.js en el espacio para la edición de código que sea funcional, óptimo, sin errores y listo para ejecutarse.
 
 ENTRADAS
 PROMPT DEL USUARIO:
@@ -73,36 +73,50 @@ DATASET:
 URL del dataset: {$dataset_url}
 (El dataset puede ser CSV o JSON. Usa los placeholders existentes, por ejemplo: {{col.year}}, {{col.value}}, etc.)
 
+⸻
+
 REGLAS DE GENERACIÓN (OBLIGATORIAS)
-1) Estructura p5.js: incluir (según corresponda) preload(), setup(), draw() y funciones auxiliares.
-2) Carga de datos:
-   - Usar exclusivamente funciones de p5.js en preload() (loadTable, loadJSON) para {$dataset_url}.
-   - No inventar datos de ejemplo; usar SOLO el dataset indicado.
-   - Respetar y reutilizar exactamente los placeholders/variables/URLs existentes (p.ej. {{DATASET_URL}}, {{col.year}}, {{col.value}}, etc.)
-3) Diseño y lógica:
-   - Implementar la visualización solicitada por {$user_prompt} con escalas/rangos dinámicos (p.ej., detectar año mínimo/máximo si procede).
-   - Evitar patrones frágiles (eval, import dinámico, XHR no previsto).
-   - No añadir dependencias externas nuevas.
-4) Robustez:
-   - Comprobar presencia y tipos de columnas/llaves antes de acceder.
-   - Manejar datasets grandes con eficiencia; evitar trabajo innecesario dentro de draw().
-5) Estilo de salida:
-   - SALIDA EXCLUSIVAMENTE EN FORMATO DE CÓDIGO JS (sin texto, comentarios, logs o anotaciones).
-   - No incluir banners, encabezados ni “```explicaciones```”.
-6) Compatibilidad:
-   - Mantener la interfaz/nombres esperados por el entorno.
-   - Conservar exactamente los placeholders existentes; no cambiarlos.
-7) Performance:
-   - Optimizar cálculos fuera de draw() siempre que sea posible.
-   - No bloquear el hilo principal.
+    1. Estructura p5.js
+    • Incluir (según corresponda) preload(), setup(), draw(), windowResized() y funciones auxiliares como drawGenerativeVisualization().
+    • Declarar todas las variables de estado compartidas (table, years, values, minValue, maxValue y cualquier otra usada en varias funciones) una sola vez en el ámbito global (fuera de cualquier función).
+    • Prohibido redeclarar estas variables dentro de funciones (setup, draw, windowResized, etc.).
+    2. Carga de datos
+    • Usar exclusivamente funciones de p5.js en preload() (loadTable, loadJSON) para {$dataset_url}.
+    • Implementar una función auxiliar getColNameInsensitive(tbl, target) para obtener nombres de columnas ignorando mayúsculas/minúsculas y usarla siempre para acceder a columnas como Year, Category, Country, Value.
+    • No inventar datos de ejemplo; usar SOLO el dataset indicado.
+    • Respetar y reutilizar exactamente los placeholders/variables/URLs existentes (p.ej., {{DATASET_URL}}, {{col.year}}, {{col.value}}).
+    3. Diseño y lógica
+    • Implementar la visualización solicitada por {$user_prompt} con escalas/rangos dinámicos (p.ej., detectar año mínimo/máximo si procede).
+    • Evitar patrones frágiles (eval, import dinámico, fetch manual, XHR no previsto).
+    • No añadir dependencias externas nuevas.
+    4. Robustez
+    • Comprobar presencia y tipos de columnas/llaves antes de acceder.
+    • Manejar datasets grandes con eficiencia; evitar trabajo innecesario dentro de draw().
+    • windowResized() debe llamar a drawGenerativeVisualization() reutilizando las variables globales, sin redefinir estado.
+    5. Estilo de salida
+    • SALIDA EXCLUSIVAMENTE EN FORMATO DE CÓDIGO JS (sin texto, comentarios, logs o anotaciones).
+    • No incluir banners, encabezados ni “explicaciones”.
+    6. Compatibilidad
+    • Mantener la interfaz/nombres esperados por el entorno.
+    • Conservar exactamente los placeholders existentes; no cambiarlos.
+    7. Performance
+    • Optimizar cálculos fuera de draw() siempre que sea posible.
+    • No bloquear el hilo principal.
+
+⸻
 
 VALIDACIONES AUTOMÁTICAS (ANTES DE DEVOLVER EL CÓDIGO)
-- [ ] ¿El archivo es completo, ejecutable en p5.js y sin errores de sintaxis?
-- [ ] ¿Usa {$dataset_url} en preload() con loadTable/loadJSON según corresponda?
-- [ ] ¿Se han conservado los placeholders/variables/URLs originales?
-- [ ] ¿No contiene comentarios, texto adicional ni console.log?
-- [ ] ¿Implementa fielmente el objetivo de {$user_prompt} con escalas/rangos dinámicos donde aplique?
-- [ ] ¿Evita dependencias externas y patrones frágiles?
+    • ¿El archivo es completo, ejecutable en p5.js y sin errores de sintaxis?
+    • ¿Usa {$dataset_url} en preload() con loadTable/loadJSON según corresponda?
+    • ¿Se han conservado los placeholders/variables/URLs originales?
+    • ¿No contiene comentarios, texto adicional ni console.log?
+    • ¿Implementa fielmente el objetivo de {$user_prompt} con escalas/rangos dinámicos donde aplique?
+    • ¿Evita dependencias externas y patrones frágiles?
+    • ¿Las variables globales (years, values, etc.) están definidas solo una vez fuera de cualquier función?
+    • ¿Existe la función getColNameInsensitive() y se usa para acceder a columnas?
+    • ¿windowResized() llama a drawGenerativeVisualization() y no redeclara variables globales?
+
+⸻
 
 FORMATO DE RESPUESTA (ESTRICTO)
 Devuelve ÚNICAMENTE el código final del archivo p5.js, sin ningún texto antes o después.
