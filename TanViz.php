@@ -19,6 +19,7 @@ define( 'TANVIZ_URL',  plugin_dir_url( __FILE__ ) );
 // Load components
 add_action( 'plugins_loaded', function () {
     $files = [
+        'includes/utils-logging.php',
         'includes/settings.php',
         'includes/validators.php',
         'includes/openai.php',
