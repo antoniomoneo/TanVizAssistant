@@ -73,6 +73,7 @@ add_action('rest_api_init', function(){
 function tanviz_rest_generate( WP_REST_Request $req ) {
     $api_key = trim( get_option( 'tanviz_openai_api_key', '' ) );
     if ( ! $api_key ) {
+        tanviz_log_error( 'Generate: Missing API key' );
         return new WP_REST_Response( array( 'error' => 'Missing API key' ), 400 );
     }
 
@@ -81,6 +82,7 @@ function tanviz_rest_generate( WP_REST_Request $req ) {
     $dataset_url = esc_url_raw( (string) $req->get_param( 'dataset_url' ) );
 
     if ( $dataset_url && ( ! wp_http_validate_url( $dataset_url ) || 'https' !== wp_parse_url( $dataset_url, PHP_URL_SCHEME ) ) ) {
+        tanviz_log_error( 'Generate: Invalid dataset URL ' . $dataset_url );
         return new WP_Error( 'tanviz_invalid_dataset', __( 'URL del dataset inválida', 'TanViz' ), array( 'status' => 400 ) );
     }
 
@@ -103,6 +105,7 @@ function tanviz_rest_generate( WP_REST_Request $req ) {
 
     $resp = tanviz_openai_generate_code_only( $args );
     if ( ! $resp['ok'] ) {
+        tanviz_log_error( 'Generate: OpenAI error ' . $resp['error'] );
         if ( 'no_block' === $resp['error'] ) {
             return new WP_Error( 'tanviz_no_code', __( 'No se encontró el bloque de código p5.js en la respuesta.', 'TanViz' ) );
         }
@@ -113,6 +116,7 @@ function tanviz_rest_generate( WP_REST_Request $req ) {
     $val    = tanviz_validate_p5_code( $codigo );
     if ( ! $val['ok'] ) {
         $err_txt = implode( ', ', $val['errors'] );
+        tanviz_log_error( 'Generate: Validation errors ' . $err_txt );
         $prompt_fix = "Corrige el código p5.js basándote en los errores detectados. Debes reemplazar ÚNICAMENTE lo imprescindible y devolver el archivo COMPLETO listo para ejecutar.\n\nOBJETIVO\n- Entregar SOLO el código final p5.js entre marcadores.\n\nCONTEXTO\nERROR EN VALIDACIÓN:\n{$err_txt}\n\nCÓDIGO ACTUAL:\n{$codigo}\n\nREGLAS DE CORRECCIÓN (OBLIGATORIAS)\n1) Sustitución mínima: conserva intención original.\n2) Estructura p5.js: preload(), setup(), draw() y helpers usados.\n3) Mantén dataset/URLs/placeholders existentes.\n4) Prohibido eval/import/fetch/XHR y datos de ejemplo.\n\nResponde entre:\n-----BEGIN_P5JS-----\n...CÓDIGO CORREGIDO...\n-----END_P5JS-----";
 
         $retry = tanviz_openai_generate_code_only( array(
@@ -121,6 +125,7 @@ function tanviz_rest_generate( WP_REST_Request $req ) {
             'model'          => $model,
         ) );
         if ( ! $retry['ok'] ) {
+            tanviz_log_error( 'Generate: OpenAI retry error ' . $retry['error'] );
             if ( 'no_block' === $retry['error'] ) {
                 return new WP_Error( 'tanviz_no_code', __( 'No se encontró el bloque de código p5.js en la respuesta.', 'TanViz' ) );
             }
@@ -129,6 +134,7 @@ function tanviz_rest_generate( WP_REST_Request $req ) {
         $codigo = $retry['codigo'];
         $val    = tanviz_validate_p5_code( $codigo );
         if ( ! $val['ok'] ) {
+            tanviz_log_error( 'Generate: Validation failed after retry ' . implode( ', ', $val['errors'] ) );
             return new WP_Error( 'tanviz_validation_failed', __( 'Errores de validación', 'TanViz' ), array( 'checks' => $val['checks'], 'errors' => $val['errors'] ) );
         }
     }
@@ -139,6 +145,7 @@ function tanviz_rest_generate( WP_REST_Request $req ) {
 function tanviz_rest_ask( WP_REST_Request $req ) {
     $api_key = trim( get_option( 'tanviz_openai_api_key', '' ) );
     if ( ! $api_key ) {
+        tanviz_log_error( 'Ask: Missing API key' );
         return new WP_REST_Response( array( 'error' => 'Missing API key' ), 400 );
     }
 
@@ -168,6 +175,7 @@ PROMPT;
 
     $resp = wp_remote_post( 'https://api.openai.com/v1/responses', $args );
     if ( is_wp_error( $resp ) ) {
+        tanviz_log_error( 'Ask: HTTP error ' . $resp->get_error_message() );
         return new WP_REST_Response( [ 'error' => $resp->get_error_message() ], 500 );
     }
 
@@ -175,6 +183,7 @@ PROMPT;
     $raw  = wp_remote_retrieve_body( $resp );
     $json = json_decode( $raw, true );
     if ( $code_status < 200 || $code_status >= 300 || ! is_array( $json ) ) {
+        tanviz_log_error( 'Ask: API error ' . $code_status );
         return new WP_REST_Response( [ 'error' => 'API error', 'raw' => $raw ], 500 );
     }
 
@@ -185,6 +194,7 @@ PROMPT;
         $out = $json['output'][0]['content'][0]['text'];
     }
     if ( ! $out ) {
+        tanviz_log_error( 'Ask: No output from OpenAI' );
         return new WP_REST_Response( [ 'error' => 'No output', 'raw' => $json ], 502 );
     }
 
@@ -194,6 +204,7 @@ PROMPT;
 function tanviz_rest_fix( WP_REST_Request $req ) {
     $api_key = trim( get_option( 'tanviz_openai_api_key', '' ) );
     if ( ! $api_key ) {
+        tanviz_log_error( 'Fix: Missing API key' );
         return new WP_REST_Response( array( 'error' => 'Missing API key' ), 400 );
     }
 
@@ -260,6 +271,7 @@ PROMPT;
 
     $resp = wp_remote_post( 'https://api.openai.com/v1/responses', $args );
     if ( is_wp_error( $resp ) ) {
+        tanviz_log_error( 'Fix: HTTP error ' . $resp->get_error_message() );
         return new WP_REST_Response( [ 'error' => $resp->get_error_message() ], 500 );
     }
 
@@ -267,6 +279,7 @@ PROMPT;
     $raw  = wp_remote_retrieve_body( $resp );
     $json = json_decode( $raw, true );
     if ( $code_status < 200 || $code_status >= 300 || ! is_array( $json ) ) {
+        tanviz_log_error( 'Fix: API error ' . $code_status );
         return new WP_REST_Response( [ 'error' => 'API error', 'raw' => $raw ], 500 );
     }
 
@@ -277,6 +290,7 @@ PROMPT;
         $out = $json['output'][0]['content'][0]['text'];
     }
     if ( ! $out ) {
+        tanviz_log_error( 'Fix: No output from OpenAI' );
         return new WP_REST_Response( [ 'error' => 'No output', 'raw' => $json ], 502 );
     }
 
@@ -292,6 +306,7 @@ function tanviz_rest_save( WP_REST_Request $req ) {
     $dataset = esc_url_raw( (string) $req->get_param('dataset_url') );
 
     if ( ! $title || ! $slug || ! $code ) {
+        tanviz_log_error( 'Save: Missing fields' );
         return new WP_REST_Response( [ 'error' => __( 'Missing fields', 'TanViz' ) ], 400 );
     }
 
@@ -311,6 +326,7 @@ function tanviz_rest_save( WP_REST_Request $req ) {
     }
 
     if ( is_wp_error( $post_id ) ) {
+        tanviz_log_error( 'Save: ' . $post_id->get_error_message() );
         return new WP_REST_Response( [ 'error' => $post_id->get_error_message() ], 500 );
     }
 

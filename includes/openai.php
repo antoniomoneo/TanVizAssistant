@@ -62,12 +62,14 @@ function tanviz_openai_generate_code_only( array $args ): array {
 
     $resp = wp_remote_post( 'https://api.openai.com/v1/responses', $args_http );
     if ( is_wp_error( $resp ) ) {
+        tanviz_log_error( 'OpenAI request failed: ' . $resp->get_error_message() );
         return array( 'ok' => false, 'error' => $resp->get_error_message(), 'raw' => '' );
     }
 
     $raw  = wp_remote_retrieve_body( $resp );
     $code = wp_remote_retrieve_response_code( $resp );
     if ( $code < 200 || $code >= 300 ) {
+        tanviz_log_error( 'OpenAI HTTP error ' . $code . ': ' . $raw );
         return array( 'ok' => false, 'error' => 'http_' . $code, 'raw' => $raw );
     }
 
@@ -92,6 +94,7 @@ function tanviz_openai_generate_code_only( array $args ): array {
 
     $block = tanviz_extract_p5_block( $text );
     if ( ! $block['ok'] ) {
+        tanviz_log_error( 'Missing p5.js code block in OpenAI response.' );
         return array( 'ok' => false, 'error' => 'no_block', 'raw' => $text );
     }
 
