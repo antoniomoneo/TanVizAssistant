@@ -78,11 +78,15 @@ URL del dataset: {$dataset_url}
 REGLAS DE GENERACIÓN (OBLIGATORIAS)
     1. Estructura p5.js
     • Incluir (según corresponda) preload(), setup(), draw(), windowResized() y funciones auxiliares como drawGenerativeVisualization().
-    • Declarar todas las variables de estado compartidas (table, years, values, minValue, maxValue y cualquier otra usada en varias funciones) una sola vez en el ámbito global (fuera de cualquier función).
+    • Declarar todas las variables de estado compartidas (table, dataJSON, years, values, minValue, maxValue y cualquier otra usada en varias funciones) una sola vez en el ámbito global (fuera de cualquier función).
     • Prohibido redeclarar estas variables dentro de funciones (setup, draw, windowResized, etc.).
+    • Usar noLoop() y redraw() cuando el renderizado no sea animado.
+
     2. Carga de datos
-    • Usar exclusivamente funciones de p5.js en preload() (loadTable, loadJSON) para {$dataset_url}.
-    • Implementar y usar siempre esta función auxiliar para buscar columnas ignorando mayúsculas/minúsculas:
+    • Usar exclusivamente funciones de p5.js en preload() para {$dataset_url}:
+      – CSV: loadTable({$dataset_url}, 'csv', 'header')
+      – JSON: loadJSON({$dataset_url})
+    • Implementar y usar SIEMPRE esta función auxiliar para buscar columnas ignorando mayúsculas/minúsculas en tablas CSV:
 
     ```js
     function getColNameInsensitive(tbl, target) {
@@ -95,25 +99,39 @@ REGLAS DE GENERACIÓN (OBLIGATORIAS)
       return -1;
     }
     ```
+
     • No inventar datos de ejemplo; usar SOLO el dataset indicado.
-    • Respetar y reutilizar exactamente los placeholders/variables/URLs existentes (p.ej., {{DATASET_URL}}, {{col.year}}, {{col.value}}).
+    • Respetar y reutilizar EXACTAMENTE los placeholders/variables/URLs existentes (p.ej., {{DATASET_URL}}, {{col.year}}, {{col.value}}).
+    • Antes de acceder a campos/columnas, comprobar su existencia (en CSV con getColNameInsensitive; en JSON comprobando claves/longitud).
+
     3. Diseño y lógica
     • Implementar la visualización solicitada por {$user_prompt} con escalas/rangos dinámicos (p.ej., detectar año mínimo/máximo si procede).
-    • Evitar patrones frágiles (eval, import dinámico, fetch manual, XHR no previsto).
+    • Calcular minValue y maxValue a partir de los datos válidos. Si minValue === maxValue, ampliar ligeramente el rango para evitar divisiones por cero.
+    • Si la visualización lo requiere, incluir ejes básicos y/o línea de cero cuando caiga dentro del rango.
+    • Evitar patrones frágiles (eval, import dinámico, fetch/XHR manual fuera de p5.js).
     • No añadir dependencias externas nuevas.
-    4. Robustez
-    • Comprobar presencia y tipos de columnas/llaves antes de acceder.
-    • Manejar datasets grandes con eficiencia; evitar trabajo innecesario dentro de draw().
-    • windowResized() debe llamar a drawGenerativeVisualization() reutilizando las variables globales, sin redefinir estado.
+
+    4. Robustez (métodos y manejo de errores)
+    • Mostrar un mensaje de diagnóstico en el canvas cuando falten columnas/llaves o no existan datos válidos.
+    • Incluir y usar una función drawGenerativeVisualization() que pinte la escena completa sin redefinir estado global.
+    • Incluir una función drawMessage(msg) que pinte mensajes de diagnóstico en el canvas si hay problemas.
+    • Si se dibujan ejes/etiquetas, incluir una función auxiliar (p.ej., drawAxesLabels(...)) y llamarla desde drawGenerativeVisualization().
+    • windowResized() debe llamar a drawGenerativeVisualization() reutilizando las variables globales (sin reprocesar el dataset innecesariamente).
+    • Manejar datasets grandes con eficiencia; evitar trabajo costoso dentro de draw() si no hay animación.
+
     5. Estilo de salida
     • SALIDA EXCLUSIVAMENTE EN FORMATO DE CÓDIGO JS (sin texto, comentarios, logs o anotaciones).
     • No incluir banners, encabezados ni “explicaciones”.
+    • Prohibido usar console.log.
+
     6. Compatibilidad
     • Mantener la interfaz/nombres esperados por el entorno.
     • Conservar exactamente los placeholders existentes; no cambiarlos.
+
     7. Performance
     • Optimizar cálculos fuera de draw() siempre que sea posible.
     • No bloquear el hilo principal.
+    • Para visualizaciones no animadas, usar noLoop() y llamar a redraw() solo cuando sea necesario (p.ej., al redimensionar).
 
 ⸻
 
@@ -126,7 +144,9 @@ VALIDACIONES AUTOMÁTICAS (ANTES DE DEVOLVER EL CÓDIGO)
     • ¿Evita dependencias externas y patrones frágiles?
     • ¿Las variables globales (years, values, etc.) están definidas solo una vez fuera de cualquier función?
     • ¿Existe la función getColNameInsensitive() y se usa para acceder a columnas?
+    • ¿drawGenerativeVisualization() y drawMessage() existen y se usan correctamente?
     • ¿windowResized() llama a drawGenerativeVisualization() y no redeclara variables globales?
+    • ¿Se evita el rango nulo (minValue === maxValue) ajustando el dominio antes de mapear?
 
 ⸻
 
