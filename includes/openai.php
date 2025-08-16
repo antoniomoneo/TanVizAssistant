@@ -12,6 +12,7 @@ function tanviz_openai_assistant_chat( array $args ): array {
     $prompt_user   = isset( $args['prompt_usuario'] ) ? (string) $args['prompt_usuario'] : '';
     $model         = isset( $args['model'] ) ? (string) $args['model'] : 'gpt-4o-2024-08-06';
     $thread_id     = isset( $args['thread_id'] ) ? (string) $args['thread_id'] : '';
+    $expect_code   = isset( $args['expect_code'] ) ? (bool) $args['expect_code'] : (bool) $dataset_url;
 
     $api_key      = trim( get_option( 'tanviz_openai_api_key', '' ) );
     $assistant_id = trim( get_option( 'tanviz_assistant_id', '' ) );
@@ -149,19 +150,25 @@ function tanviz_openai_assistant_chat( array $args ): array {
     }
 
     $code = '';
-    for ( $i = count( $msgs ) - 1; $i >= 0; $i-- ) {
-        if ( $msgs[ $i ]['role'] === 'assistant' ) {
-            $block = tanviz_extract_p5_block( $msgs[ $i ]['text'] );
-            if ( $block['ok'] ) {
-                $code = $block['code'];
-                break;
+    if ( $expect_code ) {
+        for ( $i = count( $msgs ) - 1; $i >= 0; $i-- ) {
+            if ( $msgs[ $i ]['role'] === 'assistant' ) {
+                $block = tanviz_extract_p5_block( $msgs[ $i ]['text'] );
+                if ( $block['ok'] ) {
+                    $code = $block['code'];
+                    break;
+                }
             }
         }
-    }
-    if ( ! $code ) {
-        tanviz_log_error( 'Missing p5.js code block in OpenAI response.' );
-        return array( 'ok' => false, 'error' => 'no_block', 'raw' => wp_remote_retrieve_body( $resp ), 'thread_id' => $thread_id, 'messages' => $msgs );
+        if ( ! $code ) {
+            tanviz_log_error( 'Missing p5.js code block in OpenAI response.' );
+            return array( 'ok' => false, 'error' => 'no_block', 'raw' => wp_remote_retrieve_body( $resp ), 'thread_id' => $thread_id, 'messages' => $msgs );
+        }
     }
 
-    return array( 'ok' => true, 'code' => $code, 'thread_id' => $thread_id, 'messages' => $msgs );
+    $result = array( 'ok' => true, 'thread_id' => $thread_id, 'messages' => $msgs );
+    if ( $code ) {
+        $result['code'] = $code;
+    }
+    return $result;
 }

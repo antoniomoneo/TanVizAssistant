@@ -297,6 +297,7 @@ function tanviz_rest_chat( WP_REST_Request $req ) {
             'thread_id'      => $thread_id,
             'prompt_usuario' => $message,
             'model'          => $model,
+            'expect_code'    => false,
         ] );
     } catch ( Throwable $e ) {
         tanviz_log_error([ 'action'=>'chat', 'message'=>$e->getMessage() ]);
@@ -308,7 +309,7 @@ function tanviz_rest_chat( WP_REST_Request $req ) {
         return new WP_Error( 'tanviz_openai_error', $resp['error'], array( 'raw' => $resp['raw'] ) );
     }
 
-    return new WP_REST_Response( array( 'success'=>true, 'code'=>$resp['code'] ?? '', 'thread_id'=>$resp['thread_id'], 'messages'=>$resp['messages'] ), 200 );
+    return new WP_REST_Response( array( 'success'=>true, 'thread_id'=>$resp['thread_id'], 'messages'=>$resp['messages'] ), 200 );
 }
 
 function tanviz_rest_ask( WP_REST_Request $req ) {
