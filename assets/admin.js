@@ -285,12 +285,6 @@
     });
   });
 
-  $(document).on('click','#tanviz-copy-rr',function(e){
-    e.preventDefault();
-    const txt = $('#tanviz-rr').text();
-    if (txt){ navigator.clipboard.writeText(txt).then(()=>alert('Copied')); }
-  });
-
   $(document).on('click','#tanviz-copy-console',function(e){
     e.preventDefault();
     const txt = $('#tanviz-console').text();

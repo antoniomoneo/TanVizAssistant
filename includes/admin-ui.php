@@ -62,7 +62,7 @@ function tanviz_render_sandbox(){
           <h2><?php echo esc_html__('Dataset sample','TanViz'); ?></h2>
           <pre id="tanviz-sample"></pre>
           <p><button class="button button-primary" id="tanviz-generate"><?php echo esc_html__('Generate visualization','TanViz'); ?></button></p>
-          <details id="tanviz-rr-wrap"><summary><?php echo esc_html__( 'Request/Response', 'TanViz' ); ?></summary><pre id="tanviz-rr"></pre><p><button class="button" id="tanviz-copy-rr"><?php echo esc_html__('Copy','TanViz'); ?></button></p></details>
+          <details id="tanviz-rr-wrap"><summary><?php echo esc_html__( 'Request/Response', 'TanViz' ); ?></summary><div class="tanviz-code-block"><button class="button tanviz-copy" id="tanviz-copy-rr"><?php echo esc_html__('Copy','TanViz'); ?></button><pre id="tanviz-rr" class="tanviz-code"></pre></div></details>
           <h2><?php echo esc_html__('Conversation','TanViz'); ?></h2>
           <div id="tanviz-thread" class="tanviz-thread"></div>
           <textarea id="tanviz-chat-input" rows="3" class="large-text"></textarea>
