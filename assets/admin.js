@@ -90,6 +90,7 @@
   function renderThread(msgs){
     const $t = $('#tanviz-thread');
     $t.empty();
+    let lastCode = '';
     (msgs||[]).forEach(m => {
       const role = m.role;
       const text = m.text || '';
@@ -104,6 +105,8 @@
         if (firstLineBreak !== -1) {
           code = code.slice(firstLineBreak + 1); // drop language hint
         }
+        code = code.trim();
+        if (role === 'assistant') { lastCode = code; }
         const $pre = $('<pre class="tanviz-code"></pre>').text(code);
         const $btn = $('<button class="button tanviz-copy">Copy</button>');
         const $codeWrap = $('<div class="tanviz-code-block"></div>').append($btn).append($pre);
@@ -114,6 +117,10 @@
       }
       $t.append($msg);
     });
+    if (lastCode) {
+      $('#tanviz-ai-code').val(lastCode);
+      setCode(lastCode);
+    }
   }
 
   $(document).on('click', '.tanviz-copy', function(){
