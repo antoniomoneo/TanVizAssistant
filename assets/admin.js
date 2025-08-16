@@ -74,9 +74,7 @@
       const r = unwrapResponse(resp);
       threadId = r.thread_id || '';
       renderThread(r.messages);
-      if (r && (r.success || r.ok) && r.code){
-        $('#tanviz-ai-code').val(r.code);
-      } else {
+      if (!(r && (r.success || r.ok))){
         $('#tanviz-console').text('Error inesperado. Reintenta.');
       }
     }).fail(function(xhr){
@@ -140,7 +138,6 @@
       $('#tanviz-rr').text(JSON.stringify({request:{thread_id:threadId,message},response:resp},null,2));
       const r = unwrapResponse(resp);
       renderThread(r.messages);
-      if(r.code){ $('#tanviz-ai-code').val(r.code); }
     }).fail(function(xhr){
       $('#tanviz-rr').text(xhr.responseText || 'Error');
     });
