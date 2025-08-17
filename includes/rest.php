@@ -271,11 +271,9 @@ function tanviz_rest_generate( WP_REST_Request $req ) {
     }
 
     tanviz_log_run([
-        'action'       => 'generate',
-        'model'        => $model,
-        'dataset_url'  => $dataset_url,
-        'prompt_hash'  => $prompt_hash,
-        'response_size'=> strlen( $code ),
+        'prompt'      => $prompt,
+        'feedback'    => $code,
+        'dataset_url' => $dataset_url,
     ]);
 
     return new WP_REST_Response( array( 'success' => true, 'code' => $code, 'thread_id' => $thread_id, 'messages' => $messages ), 200 );
@@ -509,11 +507,9 @@ PROMPT;
     }
 
     tanviz_log_run([
-        'action'       => 'fix',
-        'model'        => $model,
-        'dataset_url'  => $dataset_url,
-        'prompt_hash'  => $prompt_hash,
-        'response_size'=> strlen( $out ),
+        'prompt'      => $feedback,
+        'feedback'    => $out,
+        'dataset_url' => $dataset_url,
     ]);
 
     $code_fixed = tanviz_normalize_p5_code( $out );
