@@ -11,6 +11,37 @@
   function setCode(v){ if(editor){editor.codemirror.setValue(v);} else {$('#tanviz-code').val(v);} }
   function unwrapResponse(resp){ return resp && resp.response ? resp.response : resp; }
 
+  async function insertP5IntoEditor(payload){
+    const resp = await fetch(TanVizCfg.rest.generate, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-WP-Nonce': TanVizCfg.nonce
+      },
+      body: JSON.stringify(payload)
+    });
+
+    const body = await resp.text();
+
+    const plain = body
+      .replace(/\\n/g, '\n')
+      .replace(/\\t/g, '\t')
+      .replace(/\r/g, '');
+
+    $('#tanviz-rr').text(plain);
+
+    const m = plain.match(/-----BEGIN_P5JS-----\s*([\s\S]*?)\s*-----END_P5JS-----/);
+    if (!m) {
+      console.error('No se encontró el bloque P5JS en la respuesta');
+      alert('No se encontró el bloque P5JS en la respuesta');
+      return;
+    }
+
+    const code = m[1];
+    setCode(code);
+    $('#tanviz-ai-code').val(code);
+  }
+
   function writeIframe(code, title){
     const $if = $('#tanviz-iframe');
     const doc = $if[0].contentWindow.document;
@@ -56,35 +87,19 @@
     }
   });
 
-  $(document).on('click','#tanviz-generate',function(e){
+  $(document).on('click','#tanviz-generate',async function(e){
     e.preventDefault();
     const prompt = $('#tanviz-prompt').val();
     const dataset_url = $('#tanviz-dataset').val();
     const body = { prompt, dataset_url };
     $('#tanviz-rr').text('Generating...');
     $('#tanviz-rr-wrap').prop('open', true);
-    $.ajax({
-      url: TanVizCfg.rest.generate,
-      method: 'POST',
-      headers: { 'X-WP-Nonce': TanVizCfg.nonce },
-      contentType: 'application/json',
-      data: JSON.stringify(body),
-    }).done(function(resp){
-      $('#tanviz-rr').text(JSON.stringify({request:body,response:resp},null,2));
-      const r = unwrapResponse(resp);
-      threadId = r.thread_id || '';
-      renderThread(r.messages);
-      if (!(r && (r.success || r.ok))){
-        $('#tanviz-console').text('Error inesperado. Reintenta.');
-      }
-    }).fail(function(xhr){
-      let msg = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : (xhr.responseText || 'Error');
-      if (xhr.responseJSON && xhr.responseJSON.data && xhr.responseJSON.data.errors){
-        msg += '\n' + xhr.responseJSON.data.errors.join(', ');
-      }
-      $('#tanviz-console').text(msg + '\nReintenta.');
-      $('#tanviz-rr').text(msg);
-    });
+    try {
+      await insertP5IntoEditor(body);
+    } catch (err) {
+      console.error(err);
+      $('#tanviz-console').text('Error inesperado. Reintenta.');
+    }
   });
 
   function renderThread(msgs){
