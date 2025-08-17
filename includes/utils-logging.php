@@ -83,7 +83,7 @@ add_action( 'tanviz_logs_cleanup_daily', function(){
 
 add_action( 'init', function(){
     tanviz_lessons_update([
-        "Placeholders Incorrectos: debes reemplazar '{{col.year}}' y '{{col.value}}' por los nombres reales de columnas.",
+        "Evita placeholders: usa los nombres reales de las columnas.",
         "Cálculo de Rango: verifica datos vacíos o mal formateados antes de min/max.",
         "Visualización: beginShape()/endShape() + puntos para resaltar observaciones.",
         "Manejo de Errores: captura fallos al cargar CSV (URL incorrecta / 404).",

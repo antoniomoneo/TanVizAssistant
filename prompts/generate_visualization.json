@@ -11,16 +11,6 @@
       "key": "DATASET_URL",
       "description": "URL directa al dataset en formato CSV o JSON.",
       "example": "https://raw.githubusercontent.com/usuario/datasets/main/temperaturas.csv"
-    },
-    {
-      "key": "col.year",
-      "description": "Nombre genérico de la columna que contiene los años.",
-      "example": "year"
-    },
-    {
-      "key": "col.value",
-      "description": "Nombre genérico de la columna que contiene los valores numéricos de la serie temporal.",
-      "example": "value"
     }
   ],
   "sections": {
@@ -32,13 +22,13 @@
     "inputs": {
       "prompt_usuario": "{{PROMPT_USUARIO}}",
       "dataset_url": "{{DATASET_URL}}",
-      "dataset_notes": "El dataset puede ser CSV o JSON. Usa los placeholders existentes, por ejemplo: {{col.year}}, {{col.value}}."
+      "dataset_notes": "El dataset puede ser CSV o JSON. Utiliza los nombres reales de las columnas."
     },
     "rules": [
       "Estructura p5.js: incluir (según corresponda) preload(), setup(), draw(), windowResized() y funciones auxiliares como drawGenerativeVisualization().",
       "Declarar todas las variables de estado compartidas (table, years, values, minValue, maxValue y cualquier otra usada en varias funciones) una sola vez en el ámbito global.",
       "Carga de datos: usar exclusivamente funciones de p5.js en preload() (loadTable, loadJSON) para {{DATASET_URL}}. No inventar datos ni columnas.",
-      "Procesamiento: usar {{col.year}}, {{col.value}} como referencia genérica para acceder a columnas, detectando el índice por nombre (insensible a mayúsculas/minúsculas).",
+      "Procesamiento: acceder a las columnas utilizando sus nombres reales, detectando el índice por nombre (insensible a mayúsculas/minúsculas).",
       "Rango dinámico: calcular minValue y maxValue a partir de los datos cargados.",
       "Visualización: usar map(), min(), max(), background(), stroke(), fill() y otras funciones de p5.js para representar los datos de forma creativa.",
       "Compatibilidad: el código debe ser autónomo y ejecutable directamente en un entorno p5.js sin dependencias externas.",

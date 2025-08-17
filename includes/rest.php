@@ -169,7 +169,7 @@ function tanviz_rest_generate( WP_REST_Request $req ) {
             'message'     => $e->getMessage(),
         ]);
         tanviz_lessons_update([
-            "Placeholders Incorrectos: reemplaza {{col.year}} y {{col.value}} por las columnas reales del CSV.",
+            "Usa las cabeceras reales del CSV en lugar de placeholders.",
             "Manejo de Errores: captura fallos al cargar CSV (URL incorrecta/archivo no disponible).",
             "Optimización: usa noLoop() para visualización estática.",
         ]);
@@ -192,7 +192,7 @@ function tanviz_rest_generate( WP_REST_Request $req ) {
             'openai_error'=> $resp['raw'] ?? '',
         ]);
         tanviz_lessons_update([
-            "Placeholders Incorrectos: reemplaza {{col.year}} y {{col.value}} por las columnas reales del CSV.",
+            "Usa las cabeceras reales del CSV en lugar de placeholders.",
             "Manejo de Errores: captura fallos al cargar CSV (URL incorrecta/archivo no disponible).",
             "Optimización: usa noLoop() para visualización estática.",
         ]);
@@ -215,11 +215,11 @@ function tanviz_rest_generate( WP_REST_Request $req ) {
             'openai_error'=> $err_txt,
         ]);
         tanviz_lessons_update([
-            "Placeholders Incorrectos: reemplaza {{col.year}} y {{col.value}} por las columnas reales del CSV.",
+            "Usa las cabeceras reales del CSV en lugar de placeholders.",
             "Manejo de Errores: captura fallos al cargar CSV (URL incorrecta/archivo no disponible).",
             "Optimización: usa noLoop() para visualización estática.",
         ]);
-        $prompt_fix = "Corrige el código p5.js basándote en los errores detectados. Debes reemplazar ÚNICAMENTE lo imprescindible y devolver el archivo COMPLETO listo para ejecutar.\n\nOBJETIVO\n- Entregar SOLO el código final p5.js entre marcadores.\n\nCONTEXTO\nERROR EN VALIDACIÓN:\n{$err_txt}\n\nCÓDIGO ACTUAL:\n{$code}\n\nREGLAS DE CORRECCIÓN (OBLIGATORIAS)\n1) Sustitución mínima: conserva intención original.\n2) Estructura p5.js: preload(), setup(), draw() y helpers usados.\n3) Mantén dataset/URLs/placeholders existentes.\n4) Prohibido eval/import/fetch/XHR y datos de ejemplo.\n\nResponde entre:\n-----BEGIN_P5JS-----\n...CÓDIGO CORREGIDO...\n-----END_P5JS-----";
+        $prompt_fix = "Corrige el código p5.js basándote en los errores detectados. Debes reemplazar ÚNICAMENTE lo imprescindible y devolver el archivo COMPLETO listo para ejecutar.\n\nOBJETIVO\n- Entregar SOLO el código final p5.js entre marcadores.\n\nCONTEXTO\nERROR EN VALIDACIÓN:\n{$err_txt}\n\nCÓDIGO ACTUAL:\n{$code}\n\nREGLAS DE CORRECCIÓN (OBLIGATORIAS)\n1) Sustitución mínima: conserva intención original.\n2) Estructura p5.js: preload(), setup(), draw() y helpers usados.\n3) Mantén dataset/URLs existentes.\n4) Prohibido eval/import/fetch/XHR y datos de ejemplo.\n\nResponde entre:\n-----BEGIN_P5JS-----\n...CÓDIGO CORREGIDO...\n-----END_P5JS-----";
 
         $retry = tanviz_openai_assistant_chat( [
             'dataset_url'    => $dataset_url,
@@ -240,7 +240,7 @@ function tanviz_rest_generate( WP_REST_Request $req ) {
                 'openai_error'=> $retry['raw'] ?? '',
             ]);
             tanviz_lessons_update([
-                "Placeholders Incorrectos: reemplaza {{col.year}} y {{col.value}} por las columnas reales del CSV.",
+                "Usa las cabeceras reales del CSV en lugar de placeholders.",
                 "Manejo de Errores: captura fallos al cargar CSV (URL incorrecta/archivo no disponible).",
                 "Optimización: usa noLoop() para visualización estática.",
             ]);
@@ -262,7 +262,7 @@ function tanviz_rest_generate( WP_REST_Request $req ) {
                 'message'     => 'Validation failed after retry ' . implode( ', ', $val['errors'] ),
             ]);
             tanviz_lessons_update([
-                "Placeholders Incorrectos: reemplaza {{col.year}} y {{col.value}} por las columnas reales del CSV.",
+                "Usa las cabeceras reales del CSV en lugar de placeholders.",
                 "Manejo de Errores: captura fallos al cargar CSV (URL incorrecta/archivo no disponible).",
                 "Optimización: usa noLoop() para visualización estática.",
             ]);
@@ -407,10 +407,10 @@ CÓDIGO ACTUAL:
 REGLAS DE CORRECCIÓN (OBLIGATORIAS)
 1) Sustitución mínima: modifica SOLO lo imprescindible para resolver el/los errores y mantener la intención original.
 2) Estructura p5.js obligatoria: incluir (según corresponda) preload(), setup(), draw() y cualquier función auxiliar usada.
-3) Mantener placeholders/datos:
+3) Mantener datos:
    - No inventar datos ni usar muestras ficticias.
-   - Respetar y reutilizar exactamente los placeholders/variables/URLs existentes (p.ej. {{DATASET_URL}}, {{col.year}}, {{col.value}}).
-4) Sin dependencias externas nuevas: no añadir librerías ni fetchs/cargas fuera de los mecanismos ya presentes/placeholders.
+   - Respetar y reutilizar exactamente las variables/URLs existentes (p.ej. dataset_url).
+4) Sin dependencias externas nuevas: no añadir librerías ni fetchs/cargas fuera de los mecanismos ya presentes.
 5) Robustez:
    - Manejo básico de errores (p.ej., verificar existencia de columnas/valores antes de acceder).
    - Evitar patrones frágiles (eval, import dinámicos, XHR no previsto).
@@ -420,13 +420,13 @@ REGLAS DE CORRECCIÓN (OBLIGATORIAS)
    - No incluir banners, encabezados, ni “```explicaciones```”. SOLO el código JS final.
 7) Compatibilidad:
    - Mantener el API esperado por el entorno (nombres de funciones/variables públicas).
-   - No cambiar nombres de placeholders ni la interfaz esperada por el sistema.
+   - No cambiar nombres de variables ni la interfaz esperada por el sistema.
 8) Performance: evitar bucles/operaciones innecesarias en draw().
 
 VALIDACIONES AUTOMÁTICAS (ANTES DE DEVOLVER EL CÓDIGO)
 - [ ] ¿Se resuelven los puntos indicados en la retroalimentación?
 - [ ] ¿El archivo es completo, ejecutable en p5.js y sin errores de sintaxis?
-- [ ] ¿Se han conservado placeholders/variables/URLs originales?
+- [ ] ¿Se han conservado variables/URLs originales?
 - [ ] ¿No hay comentarios, impresiones de consola ni texto adicional?
 - [ ] ¿Se mantiene preload/setup/draw (si aplica) y la intención original?
 
@@ -458,7 +458,7 @@ PROMPT;
             'message'     => $resp->get_error_message(),
         ]);
         tanviz_lessons_update([
-            "Placeholders Incorrectos: reemplaza {{col.year}} y {{col.value}} por las columnas reales del CSV.",
+            "Usa las cabeceras reales del CSV en lugar de placeholders.",
             "Manejo de Errores: captura fallos al cargar CSV (URL incorrecta/archivo no disponible).",
             "Optimización: usa noLoop() para visualización estática.",
         ]);
@@ -479,7 +479,7 @@ PROMPT;
             'openai_error'=> $raw,
         ]);
         tanviz_lessons_update([
-            "Placeholders Incorrectos: reemplaza {{col.year}} y {{col.value}} por las columnas reales del CSV.",
+            "Usa las cabeceras reales del CSV en lugar de placeholders.",
             "Manejo de Errores: captura fallos al cargar CSV (URL incorrecta/archivo no disponible).",
             "Optimización: usa noLoop() para visualización estática.",
         ]);
@@ -501,7 +501,7 @@ PROMPT;
             'message'     => 'No output from OpenAI',
         ]);
         tanviz_lessons_update([
-            "Placeholders Incorrectos: reemplaza {{col.year}} y {{col.value}} por las columnas reales del CSV.",
+            "Usa las cabeceras reales del CSV en lugar de placeholders.",
             "Manejo de Errores: captura fallos al cargar CSV (URL incorrecta/archivo no disponible).",
             "Optimización: usa noLoop() para visualización estática.",
         ]);

@@ -52,7 +52,7 @@
       const $c = $('#tanviz-console');
       const txt = $c.text();
       const prefix = e.data.type === 'tanviz-error' ? 'ERROR: ' : '';
-      $c.text(txt + (txt ? '\n' : '') + prefix + e.data.message);
+      $c.text(txt + (txt ? String.fromCharCode(10) : '') + prefix + e.data.message);
     }
   });
 
@@ -80,9 +80,9 @@
     }).fail(function(xhr){
       let msg = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : (xhr.responseText || 'Error');
       if (xhr.responseJSON && xhr.responseJSON.data && xhr.responseJSON.data.errors){
-        msg += '\n' + xhr.responseJSON.data.errors.join(', ');
+        msg += String.fromCharCode(10) + xhr.responseJSON.data.errors.join(', ');
       }
-      $('#tanviz-console').text(msg + '\nReintenta.');
+      $('#tanviz-console').text(msg + String.fromCharCode(10) + 'Reintenta.');
       $('#tanviz-rr').text(msg);
     });
   });
@@ -102,8 +102,9 @@
         const after = text.slice(codeMatch.index + codeMatch[0].length).trim();
         if (before) { $msg.append($('<p></p>').text(before)); }
         let code = codeMatch[1];
+        code = code.replace(/\\n/g, String.fromCharCode(10));
         if (!markerMatch) {
-          const firstLineBreak = code.indexOf('\n');
+          const firstLineBreak = code.indexOf(String.fromCharCode(10));
           if (firstLineBreak !== -1) {
             code = code.slice(firstLineBreak + 1); // drop language hint
           }

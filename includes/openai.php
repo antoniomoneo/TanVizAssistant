@@ -52,14 +52,12 @@ function tanviz_openai_assistant_chat( array $args ): array {
             "ENTRADAS\n" .
             "- PROMPT DEL USUARIO: {$prompt_user}\n" .
             "- DATASET_URL: {$dataset_url}\n" .
-            "- Placeholders disponibles: {{col.year}}, {{col.value}} (no hardcodear cabeceras/URLs)\n\n" .
-            "CONTRATO OBLIGATORIO\n" .
+            "\nCONTRATO OBLIGATORIO\n" .
             "1) Estructura: define preload(), setup(), draw(), y windowResized() si procede. Declara helpers antes de usarlos.\n" .
             "2) Carga de datos: usa SOLO funciones de p5.js (loadTable/loadJSON) con {$dataset_url}.\n" .
-            "3) Placeholders: usa {{col.*}} (p. ej., {{col.year}}, {{col.value}}). Prohibido datos de ejemplo/muestras.\n" .
-            "4) Rangos dinámicos: calcula yearMin/yearMax y min/max de valores.\n" .
-            "5) Prohibido: eval(), import(), fetch(), XHR, CSS externo.\n" .
-            "6) Respuesta: devuelve EXCLUSIVAMENTE el código entre:\n" .
+            "3) Rangos dinámicos: calcula yearMin/yearMax y min/max de valores.\n" .
+            "4) Prohibido: eval(), import(), fetch(), XHR, CSS externo.\n" .
+            "5) Respuesta: devuelve EXCLUSIVAMENTE el código entre:\n" .
             "-----BEGIN_P5JS-----\n" .
             "...AQUÍ VA EL CÓDIGO...\n" .
             "-----END_P5JS-----";

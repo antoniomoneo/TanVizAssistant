@@ -1,6 +1,6 @@
 # Lecciones aprendidas
 
-- **Placeholders correctos**: Reemplaza `{{col.year}}` y `{{col.value}}` con los nombres reales de las columnas del dataset.
+- **Cabeceras reales**: Usa directamente los nombres de las columnas del dataset, sin placeholders.
 - **Dependencia de `preload()`**: Esta función bloquea la ejecución hasta que los datos se cargan; toma en cuenta su impacto en el tiempo de carga.
 - **Manejo de errores**: Maneja errores en la carga de datos mostrando mensajes en la consola y, si es posible, también en la visualización.
 - **Verificación de `table`**: Cuando se usa `preload()`, la tabla estará disponible en `draw()` y no necesita comprobaciones redundantes.
