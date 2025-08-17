@@ -168,11 +168,6 @@ function tanviz_rest_generate( WP_REST_Request $req ) {
             'prompt_hash' => $prompt_hash,
             'message'     => $e->getMessage(),
         ]);
-        tanviz_lessons_update([
-            "Placeholders Incorrectos: reemplaza {{col.year}} y {{col.value}} por las columnas reales del CSV.",
-            "Manejo de Errores: captura fallos al cargar CSV (URL incorrecta/archivo no disponible).",
-            "Optimización: usa noLoop() para visualización estática.",
-        ]);
         return new WP_Error( 'tanviz_openai_exception', $e->getMessage() );
     }
 
@@ -191,11 +186,6 @@ function tanviz_rest_generate( WP_REST_Request $req ) {
             'message'     => $resp['error'],
             'openai_error'=> $resp['raw'] ?? '',
         ]);
-        tanviz_lessons_update([
-            "Placeholders Incorrectos: reemplaza {{col.year}} y {{col.value}} por las columnas reales del CSV.",
-            "Manejo de Errores: captura fallos al cargar CSV (URL incorrecta/archivo no disponible).",
-            "Optimización: usa noLoop() para visualización estática.",
-        ]);
         if ( 'no_block' === $resp['error'] ) {
             return new WP_Error( 'tanviz_no_code', __( 'No se encontró el bloque de código p5.js en la respuesta.', 'TanViz' ), array( 'status' => 500 ) );
         }
@@ -213,11 +203,6 @@ function tanviz_rest_generate( WP_REST_Request $req ) {
             'prompt_hash' => $prompt_hash,
             'message'     => 'Validation errors ' . $err_txt,
             'openai_error'=> $err_txt,
-        ]);
-        tanviz_lessons_update([
-            "Placeholders Incorrectos: reemplaza {{col.year}} y {{col.value}} por las columnas reales del CSV.",
-            "Manejo de Errores: captura fallos al cargar CSV (URL incorrecta/archivo no disponible).",
-            "Optimización: usa noLoop() para visualización estática.",
         ]);
         $prompt_fix = "Corrige el código p5.js basándote en los errores detectados. Debes reemplazar ÚNICAMENTE lo imprescindible y devolver el archivo COMPLETO listo para ejecutar.\n\nOBJETIVO\n- Entregar SOLO el código final p5.js entre marcadores.\n\nCONTEXTO\nERROR EN VALIDACIÓN:\n{$err_txt}\n\nCÓDIGO ACTUAL:\n{$code}\n\nREGLAS DE CORRECCIÓN (OBLIGATORIAS)\n1) Sustitución mínima: conserva intención original.\n2) Estructura p5.js: preload(), setup(), draw() y helpers usados.\n3) Mantén dataset/URLs/placeholders existentes.\n4) Prohibido eval/import/fetch/XHR y datos de ejemplo.\n\nResponde entre:\n-----BEGIN_P5JS-----\n...CÓDIGO CORREGIDO...\n-----END_P5JS-----";
 
@@ -239,11 +224,6 @@ function tanviz_rest_generate( WP_REST_Request $req ) {
                 'message'     => $retry['error'],
                 'openai_error'=> $retry['raw'] ?? '',
             ]);
-            tanviz_lessons_update([
-                "Placeholders Incorrectos: reemplaza {{col.year}} y {{col.value}} por las columnas reales del CSV.",
-                "Manejo de Errores: captura fallos al cargar CSV (URL incorrecta/archivo no disponible).",
-                "Optimización: usa noLoop() para visualización estática.",
-            ]);
             if ( 'no_block' === $retry['error'] ) {
                 return new WP_Error( 'tanviz_no_code', __( 'No se encontró el bloque de código p5.js en la respuesta.', 'TanViz' ) );
             }
@@ -261,21 +241,14 @@ function tanviz_rest_generate( WP_REST_Request $req ) {
                 'prompt_hash' => $prompt_hash,
                 'message'     => 'Validation failed after retry ' . implode( ', ', $val['errors'] ),
             ]);
-            tanviz_lessons_update([
-                "Placeholders Incorrectos: reemplaza {{col.year}} y {{col.value}} por las columnas reales del CSV.",
-                "Manejo de Errores: captura fallos al cargar CSV (URL incorrecta/archivo no disponible).",
-                "Optimización: usa noLoop() para visualización estática.",
-            ]);
             return new WP_Error( 'tanviz_validation_failed', __( 'Errores de validación', 'TanViz' ), array( 'checks' => $val['checks'], 'errors' => $val['errors'] ) );
         }
     }
 
     tanviz_log_run([
-        'action'       => 'generate',
-        'model'        => $model,
-        'dataset_url'  => $dataset_url,
-        'prompt_hash'  => $prompt_hash,
-        'response_size'=> strlen( $code ),
+        'prompt'      => $prompt,
+        'feedback'    => $code,
+        'dataset_url' => $dataset_url,
     ]);
 
     return new WP_REST_Response( array( 'success' => true, 'code' => $code, 'thread_id' => $thread_id, 'messages' => $messages ), 200 );
@@ -457,11 +430,6 @@ PROMPT;
             'prompt_hash' => $prompt_hash,
             'message'     => $resp->get_error_message(),
         ]);
-        tanviz_lessons_update([
-            "Placeholders Incorrectos: reemplaza {{col.year}} y {{col.value}} por las columnas reales del CSV.",
-            "Manejo de Errores: captura fallos al cargar CSV (URL incorrecta/archivo no disponible).",
-            "Optimización: usa noLoop() para visualización estática.",
-        ]);
         return new WP_REST_Response( [ 'error' => $resp->get_error_message() ], 500 );
     }
 
@@ -477,11 +445,6 @@ PROMPT;
             'http_status' => $code_status,
             'message'     => 'API error',
             'openai_error'=> $raw,
-        ]);
-        tanviz_lessons_update([
-            "Placeholders Incorrectos: reemplaza {{col.year}} y {{col.value}} por las columnas reales del CSV.",
-            "Manejo de Errores: captura fallos al cargar CSV (URL incorrecta/archivo no disponible).",
-            "Optimización: usa noLoop() para visualización estática.",
         ]);
         return new WP_REST_Response( [ 'error' => 'API error', 'raw' => $raw ], 500 );
     }
@@ -500,20 +463,13 @@ PROMPT;
             'prompt_hash' => $prompt_hash,
             'message'     => 'No output from OpenAI',
         ]);
-        tanviz_lessons_update([
-            "Placeholders Incorrectos: reemplaza {{col.year}} y {{col.value}} por las columnas reales del CSV.",
-            "Manejo de Errores: captura fallos al cargar CSV (URL incorrecta/archivo no disponible).",
-            "Optimización: usa noLoop() para visualización estática.",
-        ]);
         return new WP_REST_Response( [ 'error' => 'No output', 'raw' => $json ], 502 );
     }
 
     tanviz_log_run([
-        'action'       => 'fix',
-        'model'        => $model,
-        'dataset_url'  => $dataset_url,
-        'prompt_hash'  => $prompt_hash,
-        'response_size'=> strlen( $out ),
+        'prompt'      => $feedback,
+        'feedback'    => $out,
+        'dataset_url' => $dataset_url,
     ]);
 
     $code_fixed = tanviz_normalize_p5_code( $out );
