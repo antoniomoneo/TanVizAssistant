@@ -95,15 +95,18 @@
       const role = m.role;
       const text = m.text || '';
       const $msg = $('<div class="tanviz-msg tanviz-' + role + '"></div>');
-      const codeMatch = text.match(/```([\s\S]*?)```/);
+      const markerMatch = text.match(/-----BEGIN_P5JS-----\s*([\s\S]*?)\s*-----END_P5JS-----/);
+      const codeMatch = markerMatch || text.match(/```([\s\S]*?)```/);
       if (codeMatch) {
         const before = text.slice(0, codeMatch.index).trim();
         const after = text.slice(codeMatch.index + codeMatch[0].length).trim();
         if (before) { $msg.append($('<p></p>').text(before)); }
         let code = codeMatch[1];
-        const firstLineBreak = code.indexOf('\n');
-        if (firstLineBreak !== -1) {
-          code = code.slice(firstLineBreak + 1); // drop language hint
+        if (!markerMatch) {
+          const firstLineBreak = code.indexOf('\n');
+          if (firstLineBreak !== -1) {
+            code = code.slice(firstLineBreak + 1); // drop language hint
+          }
         }
         code = code.trim();
         if (role === 'assistant') { lastCode = code; }
