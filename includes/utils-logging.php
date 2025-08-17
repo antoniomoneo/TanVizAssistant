@@ -37,7 +37,46 @@ function tanviz_log_error( $data ): void {
 }
 
 function tanviz_log_run( array $data ): void {
-    tanviz_log_write( 'runs', $data );
+    $prompt   = isset( $data['prompt'] ) ? (string) $data['prompt'] : '';
+    $feedback = isset( $data['feedback'] ) ? (string) $data['feedback'] : '';
+    $sample   = '';
+
+    if ( ! empty( $data['dataset_url'] ) && function_exists( 'tanviz_fetch_sample' ) ) {
+        $s = tanviz_fetch_sample( $data['dataset_url'] );
+        if ( is_array( $s ) && ! empty( $s['data'] ) ) {
+            $sample = sanitize_textarea_field( $s['data'] );
+        }
+    }
+
+    $payload = [];
+    if ( $prompt !== '' ) {
+        $payload['prompt'] = $prompt;
+    }
+    if ( $feedback !== '' ) {
+        $payload['feedback'] = $feedback;
+    }
+    if ( $sample !== '' ) {
+        $payload['dataset_sample'] = $sample;
+    }
+
+    $base = tanviz_logs_base_dir();
+    $file = $base . 'runs/' . current_time( 'Y-m-d' ) . '.jsonl';
+    $line = wp_json_encode( $payload, JSON_UNESCAPED_SLASHES );
+    file_put_contents( $file, $line . "\n", FILE_APPEND );
+
+    $lessons = [];
+    if ( $prompt !== '' ) {
+        $lessons[] = "Prompt: {$prompt}";
+    }
+    if ( $feedback !== '' ) {
+        $lessons[] = "Feedback: {$feedback}";
+    }
+    if ( $sample !== '' ) {
+        $lessons[] = "Dataset sample:\n{$sample}";
+    }
+    if ( ! empty( $lessons ) ) {
+        tanviz_lessons_update( $lessons );
+    }
 }
 
 function tanviz_lessons_update( array $items ): void {
@@ -80,16 +119,4 @@ add_action( 'tanviz_logs_cleanup_daily', function(){
         }
     }
 } );
-
-add_action( 'init', function(){
-    tanviz_lessons_update([
-        "Placeholders Incorrectos: debes reemplazar '{{col.year}}' y '{{col.value}}' por los nombres reales de columnas.",
-        "Cálculo de Rango: verifica datos vacíos o mal formateados antes de min/max.",
-        "Visualización: beginShape()/endShape() + puntos para resaltar observaciones.",
-        "Manejo de Errores: captura fallos al cargar CSV (URL incorrecta / 404).",
-        "Reactividad: redibuja en windowResized() manteniendo proporciones.",
-        "Estilo Visual: añade ejes y título para dar contexto.",
-        "Optimización: noLoop() para gráficos estáticos.",
-    ]);
-});
 
