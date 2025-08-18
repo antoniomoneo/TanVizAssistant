@@ -11,6 +11,16 @@
       "key": "DATASET_URL",
       "description": "URL directa al dataset en formato CSV, TSV o JSON.",
       "example": "https://raw.githubusercontent.com/usuario/datasets/main/temperaturas.csv"
+    },
+    {
+      "key": "DATA_FORMAT",
+      "description": "Formato del dataset (csv, tsv o json). Si se omite, se detectará por la extensión.",
+      "example": "csv"
+    },
+    {
+      "key": "CANVAS",
+      "description": "Propiedades del lienzo en formato JSON: width, height y renderer (2D o WEBGL).",
+      "example": "{\"width\":800,\"height\":600,\"renderer\":\"2D\"}"
     }
   ],
   "sections": {
@@ -22,11 +32,14 @@
     ],
     "inputs": {
       "user_prompt": "{{PROMPT_USUARIO}}",
-      "dataset_url": "{{DATASET_URL}}"
+      "dataset_url": "{{DATASET_URL}}",
+      "data_format": "{{DATA_FORMAT}}",
+      "canvas": "{{CANVAS}}"
     },
     "rules": [
-      "Detecta automáticamente si el dataset es CSV, TSV o JSON según la extensión.",
+      "Si data_format está definido úsalo; en caso contrario detecta si el dataset es CSV, TSV o JSON según la extensión.",
       "Usa preload() con loadTable (CSV/TSV, con 'header') o loadJSON (JSON).",
+      "Ajusta el lienzo con createCanvas usando width, height y renderer de canvas si se proporcionan.",
       "Incluye comentarios breves en español.",
       "Evita placeholders como {{col.*}}; detecta las columnas automáticamente y dibuja todas las series numéricas con una leyenda simple.",
       "Incluye un helper llamado getvalue(...) para evitar conflictos con p5.js. Para sliders o inputs de p5 usa siempre el método .value().",
