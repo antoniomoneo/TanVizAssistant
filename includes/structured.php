@@ -50,6 +50,7 @@ function tanviz_is_valid_p5( $code ) {
 }
 
 function tanviz_normalize_p5_code( $code ) {
+    $code = str_replace( [ '-----BEGIN_P5JS-----', '-----END_P5JS-----' ], '', $code );
     $code = preg_replace('/^```(?:p5|javascript|js)?\s*|\s*```$/m', '', $code);
     $code = preg_replace('#<\s*/?\s*script[^>]*>#i', '', $code);
     // Strip multiline and single-line JS comments
