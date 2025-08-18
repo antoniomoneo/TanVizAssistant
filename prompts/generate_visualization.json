@@ -1,6 +1,6 @@
 {
   "name": "generate_visualization",
-  "description": "Prompt para generar visualizaciones p5.js a partir de un dataset y un objetivo creativo.",
+  "description": "Prompt para generar visualizaciones p5.js a partir de un dataset y un objetivo creativo, devolviendo un único bloque de código.",
   "variables": [
     {
       "key": "PROMPT_USUARIO",
@@ -9,43 +9,33 @@
     },
     {
       "key": "DATASET_URL",
-      "description": "URL directa al dataset en formato CSV o JSON.",
+      "description": "URL directa al dataset en formato CSV, TSV o JSON.",
       "example": "https://raw.githubusercontent.com/usuario/datasets/main/temperaturas.csv"
-    },
-    {
-      "key": "col.year",
-      "description": "Nombre genérico de la columna que contiene los años.",
-      "example": "year"
-    },
-    {
-      "key": "col.value",
-      "description": "Nombre genérico de la columna que contiene los valores numéricos de la serie temporal.",
-      "example": "value"
     }
   ],
   "sections": {
-    "role": "Eres un experto desarrollador de código p5.js. Genera una visualización en p5.js a partir del dataset indicado y del objetivo creativo descrito por el usuario.",
+    "role": "Eres un asistente experto en p5.js. Tu tarea es generar un sketch p5.js listo para copiar y pegar en WordPress o cualquier entorno.",
     "objective": [
-      "Entregar SOLO el código final de p5.js en el espacio para la edición de código.",
-      "El código debe ser funcional, óptimo, sin errores y listo para ejecutarse."
+      "Devuelve solo un bloque de código p5.js, rodeado exactamente por -----BEGIN_P5JS----- y -----END_P5JS-----.",
+      "El bloque debe llevar saltos de línea reales y no debe contener {{ ni }} ni texto adicional.",
+      "El código debe ser funcional y listo para ejecutarse."
     ],
     "inputs": {
-      "prompt_usuario": "{{PROMPT_USUARIO}}",
-      "dataset_url": "{{DATASET_URL}}",
-      "dataset_notes": "El dataset puede ser CSV o JSON. Usa los placeholders existentes, por ejemplo: {{col.year}}, {{col.value}}."
+      "user_prompt": "{{PROMPT_USUARIO}}",
+      "dataset_url": "{{DATASET_URL}}"
     },
     "rules": [
-      "Estructura p5.js: incluir (según corresponda) preload(), setup(), draw(), windowResized() y funciones auxiliares como drawGenerativeVisualization().",
-      "Declarar todas las variables de estado compartidas (table, years, values, minValue, maxValue y cualquier otra usada en varias funciones) una sola vez en el ámbito global.",
-      "Carga de datos: usar exclusivamente funciones de p5.js en preload() (loadTable, loadJSON) para {{DATASET_URL}}. No inventar datos ni columnas.",
-      "Procesamiento: usar {{col.year}}, {{col.value}} como referencia genérica para acceder a columnas, detectando el índice por nombre (insensible a mayúsculas/minúsculas).",
-      "Rango dinámico: calcular minValue y maxValue a partir de los datos cargados.",
-      "Visualización: usar map(), min(), max(), background(), stroke(), fill() y otras funciones de p5.js para representar los datos de forma creativa.",
-      "Compatibilidad: el código debe ser autónomo y ejecutable directamente en un entorno p5.js sin dependencias externas.",
-      "Sin código muerto: no incluir funciones o variables no usadas.",
-      "Limpieza: mantener indentación coherente, sin comentarios innecesarios.",
-      "Evitar patrones frágiles: no usar datos ficticios, eval(), import(), fetch() o XHR.",
-      "Aplica las lecciones aprendidas listadas en la sección LECCIONES."
+      "Detecta automáticamente si el dataset es CSV, TSV o JSON según la extensión.",
+      "Usa preload() con loadTable (CSV/TSV, con 'header') o loadJSON (JSON).",
+      "Incluye comentarios breves en español.",
+      "Evita placeholders como {{col.*}}; detecta las columnas automáticamente y dibuja todas las series numéricas con una leyenda simple.",
+      "Incluye un helper llamado getvalue(...) para evitar conflictos con p5.js. Para sliders o inputs de p5 usa siempre el método .value().",
+      "Si no existe una columna temporal, usa el índice de fila como eje X.",
+      "Escoge la escala (min/max) por columna y dataset de forma robusta.",
+      "Antes de finalizar, valida que el bloque no contiene {{ ni }} y que solo devuelves el bloque entre las marcas.",
+      "Usa y adapta esta plantilla base al prompt y al dataset proporcionados:\n-----BEGIN_P5JS-----\nlet table;\n\n// Cargar dataset\nfunction preload(){\n// Detecta por extensión si no se indica data_format\n// CSV/TSV con cabecera:\n table = loadTable('DATASET_URL', 'csv', 'header');\n}\n\nfunction setup(){\n createCanvas(800, 600); // ajusta si se especifica canvas\n textFont('monospace'); textSize(12);\n detectColumnsFromTable(table);\n computeRanges();\n noLoop();\n}\n\n//\n// Helper universal para obtener valores sin colisionar con p5.js\n//\nfunction getvalue(source, key, fallback = 0, toNumber = true){\n let raw;\n if (source && typeof source.get === 'function') {\n raw = (typeof key === 'number') ? source.get(key) : source.get(String(key));\n } else if (source && typeof source === 'object') {\n raw = source[key];\n }\n if (raw === undefined || raw === null) return fallback;\n if (!toNumber) return raw;\n const n = Number(raw);\n return Number.isFinite(n) ? n : fallback;\n}\n\n//\n// Detección automática de columnas\n//\nconst YEAR_CANDIDATES = ['year','año','anio','yr','fecha','date','time'];\nconst VALUE_CANDIDATES = ['value','valor','temp','temperature','anomaly','anomalia','y','val'];\n\nlet COLS = { year: null, main: null, numeric: [] };\nlet XRANGE = { min: 0, max: 1 }; // para X (año o índice)\nlet YRANGE = {}; // por columna: { colName: {min, max} }\n\nfunction detectColumnsFromTable(p5table){\n if (!p5table) return;\n const headers = p5table.columns || [];\n if (!headers.length) return;\n\n // 1) Año/tiempo\n COLS.year = pickBest(headers, YEAR_CANDIDATES);\n\n // 2) Columnas numéricas por muestreo\n const sampleN = Math.min(100, p5table.getRowCount());\n const numericScore = {}; headers.forEach(h => numericScore[h] = 0);\n for (let r = 0; r < sampleN; r++){\n const row = p5table.getRow(r);\n headers.forEach(h => {\n const n = Number(row.get(h));\n if (Number.isFinite(n)) numericScore[h]++;\n });\n }\n COLS.numeric = headers.filter(h => numericScore[h] > 0)\n .sort((a,b) => numericScore[b]-numericScore[a]);\n\n // 3) Serie principal\n COLS.main = pickBest(COLS.numeric, VALUE_CANDIDATES) || COLS.numeric[0] || null;\n}\n\nfunction pickBest(headers, candidates){\n if (!headers || !headers.length) return null;\n const lower = headers.map(h => [h, h.toLowerCase()]);\n for (const c of candidates){\n const lc = c.toLowerCase();\n const hit = lower.find(([orig, low]) => low === lc || low.includes(lc));\n if (hit) return hit[0];\n }\n return null;\n}\n\n//\n// Cálculo de rangos (X global; Y por columna)\n//\nfunction computeRanges(){\n const nRows = table ? table.getRowCount() : 0;\n\n // X: año si existe, si no índice\n if (COLS.year){\n let xmin = Infinity, xmax = -Infinity;\n for (let r = 0; r < nRows; r++){\n const v = getvalue(table.getRow(r), COLS.year, 0, true);\n if (v < xmin) xmin = v;\n if (v > xmax) xmax = v;\n }\n XRANGE = { min: xmin, max: xmax };\n } else {\n XRANGE = { min: 0, max: max(1, nRows-1) };\n }\n\n // Y por columna numérica\n for (const col of COLS.numeric){\n let ymin = Infinity, ymax = -Infinity;\n for (let r = 0; r < nRows; r++){\n const v = getvalue(table.getRow(r), col, 0, true);\n if (v < ymin) ymin = v;\n if (v > ymax) ymax = v;\n }\n // Evitar rango degenerado\n if (ymin === ymax){ ymin -= 1; ymax += 1; }\n YRANGE[col] = { min: ymin, max: ymax };\n }\n}\n\nfunction draw(){\n background(10);\n drawAxes();\n drawSeries();\n drawLegend();\n drawFooter();\n}\n\nfunction xMap(v){\n // Mapear año o índice a píxeles\n return map(v, XRANGE.min, XRANGE.max, 50, width-20);\n}\n\nfunction yMap(v, col){\n const yr = YRANGE[col] || { min: 0, max: 1 };\n return map(v, yr.min, yr.max, height-40, 40);\n}\n\nfunction drawAxes(){\n stroke(120); noFill();\n // Eje X\n line(50, height-40, width-20, height-40);\n // Eje Y (principal si existe)\n line(50, height-40, 50, 40);\n\n fill(180); noStroke(); textAlign(LEFT, TOP);\n const x0 = nf(XRANGE.min, 0, 0), x1 = nf(XRANGE.max, 0, 0);\n text('X: ' + (COLS.year || 'índice') + ' [' + x0 + ' – ' + x1 + ']', 55, height-35);\n}\n\nfunction drawSeries(){\n if (!table) return;\n // Dibuja todas las columnas numéricas con colores distintos (no uses palettes externas)\n for (let i = 0; i < COLS.numeric.length; i++){\n const col = COLS.numeric[i];\n stroke(100 + (i*60)%155, 200, 255); // tono distinto\n noFill();\n beginShape();\n for (let r = 0; r < table.getRowCount(); r++){\n const row = table.getRow(r);\n const xv = COLS.year ? getvalue(row, COLS.year, 0, true) : r;\n const yv = getvalue(row, col, 0, true);\n vertex(xMap(xv), yMap(yv, col));\n }\n endShape();\n }\n}\n\nfunction drawLegend(){\n noStroke(); fill(220); textAlign(LEFT, TOP);\n let y = 50;\n text('Series:', width-180, y); y += 18;\n for (let i = 0; i < COLS.numeric.length; i++){\n const col = COLS.numeric[i];\n text('- ' + col, width-180, y);\n y += 16;\n }\n}\n\nfunction drawFooter(){\n noStroke(); fill(160);\n textAlign(LEFT, BOTTOM);\n text('Dataset autodetectado · ' + (COLS.year || 'índice') + ' vs. ' + (COLS.main || 'serie'), 50, height-10);\n}\n-----END_P5JS-----",
+      "Sustituye DATASET_URL por el valor real de dataset_url que reciba el asistente.",
+      "Aplica las lecciones listadas en la sección LECCIONES."
     ]
   }
 }
